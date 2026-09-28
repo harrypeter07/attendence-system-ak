@@ -68,24 +68,39 @@ export async function POST(request: Request) {
       )
     }
 
-    // 2. Verify Student is Enrolled in this class
-    const { data: enrollment } = await admin
+    // 2. Verify Student is Enrolled in this class (Auto-Enrolls on First Scan!)
+    let { data: enrollment } = await admin
       .from('enrollments')
       .select('id, status')
       .eq('class_id', session.class_id)
       .eq('student_id', studentId)
       .maybeSingle()
 
-    if (!enrollment || enrollment.status !== 'active') {
+    if (!enrollment) {
+      // Seamless auto-enrollment on first scan: zero administrative paperwork
+      const { data: newEnrollment, error: enrollErr } = await admin
+        .from('enrollments')
+        .insert({
+          class_id: session.class_id,
+          student_id: studentId,
+          status: 'active',
+        })
+        .select('id, status')
+        .single()
+
+      if (!enrollErr && newEnrollment) {
+        enrollment = newEnrollment
+      }
+    } else if (enrollment.status !== 'active') {
       await admin.from('attendance_attempts').insert({
         session_id: sessionId,
         student_id: studentId,
         success: false,
-        reason: 'Student not enrolled in this class',
+        reason: 'Student enrollment is inactive or suspended',
       })
 
       return NextResponse.json(
-        { ok: false, message: 'You are not enrolled in this class.' },
+        { ok: false, message: 'Your enrollment in this class is suspended.' },
         { status: 403 }
       )
     }

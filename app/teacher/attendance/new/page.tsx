@@ -199,12 +199,19 @@ export default function NewAttendanceSessionPage() {
             <Loader2 className="size-8 animate-spin text-[#6558ee]" />
           </Card>
         ) : classes.length === 0 ? (
-          <Card className="p-8 text-center">
-            <BookOpen className="mx-auto size-12 text-slate-400" />
-            <h3 className="mt-4 text-base font-semibold text-slate-900">No classes assigned</h3>
+          <Card className="p-8 text-center bg-white border-slate-200">
+            <BookOpen className="mx-auto size-12 text-slate-300" />
+            <h3 className="mt-4 text-base font-semibold text-slate-900">No classes created yet</h3>
             <p className="mt-1 text-sm text-slate-500">
-              You are not currently assigned to any active classes. Contact an administrator.
+              Create a course and class section first to start broadcasting dynamic attendance sessions.
             </p>
+            <div className="mt-4">
+              <Link href="/teacher/classes">
+                <Button className="bg-[#6558ee] text-xs font-semibold text-white hover:bg-[#5549d8]">
+                  Create Class Now
+                </Button>
+              </Link>
+            </div>
           </Card>
         ) : (
           <form onSubmit={handleStartSession} className="space-y-6">
