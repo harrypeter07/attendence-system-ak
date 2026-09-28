@@ -137,7 +137,7 @@ export default function TeacherReportsPage() {
                           {r.distanceMeters !== null ? `${r.distanceMeters}m` : 'Verified'}
                         </td>
                         <td className="px-5 py-4 text-right">
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 border border-emerald-200">
                             <CheckCircle2 className="size-3" /> {r.status}
                           </span>
                         </td>

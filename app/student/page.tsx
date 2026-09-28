@@ -97,8 +97,8 @@ export default function StudentDashboardPage() {
             style={{ maskImage: 'linear-gradient(to right, transparent, black)' }}
           />
           <div className="relative z-10 max-w-xl">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-emerald-300 backdrop-blur-sm">
-              <ShieldCheck className="size-3.5" /> Student Portal Active
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-white/10 px-2.5 py-1 text-xs font-medium text-slate-200">
+              <ShieldCheck className="size-3.5 text-emerald-400" /> Student Portal Active
             </span>
             <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
               Welcome back, {data?.studentName || 'Student'}
@@ -252,7 +252,7 @@ export default function StudentDashboardPage() {
                           </p>
                         </div>
                         <div className="text-right">
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 border border-emerald-200">
                             <CheckCircle2 className="size-3" /> Present
                           </span>
                           <p className="mt-0.5 text-[11px] text-slate-400 font-mono">{r.distance}</p>

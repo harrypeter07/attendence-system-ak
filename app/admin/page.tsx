@@ -86,8 +86,8 @@ export default function AdminDashboardPage() {
             style={{ maskImage: 'linear-gradient(to right, transparent, black)' }}
           />
           <div className="relative z-10 max-w-xl">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-rose-300 backdrop-blur-sm">
-              <ShieldCheck className="size-3.5" /> Institution Control Center
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-white/10 px-2.5 py-1 text-xs font-medium text-slate-200">
+              <ShieldCheck className="size-3.5 text-rose-300" /> Institution Control Center
             </span>
             <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
               Campus Attendance Overview
@@ -217,7 +217,7 @@ export default function AdminDashboardPage() {
                               {session.present} / {session.total}
                             </td>
                             <td className="px-5 py-4 text-right">
-                              <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${session.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 animate-pulse' : 'bg-slate-100 text-slate-600'}`}>
+                              <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ${session.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600'}`}>
                                 {session.status}
                               </span>
                             </td>

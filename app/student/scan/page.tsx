@@ -318,7 +318,7 @@ export default function StudentScanPage() {
                 </div>
                 <div className="flex justify-between items-center pt-2">
                   <span className="text-xs text-slate-500 font-medium">Classroom Distance</span>
-                  <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
                     {resultData?.distanceMeters !== null ? `✓ ${resultData?.distanceMeters}m away` : '✓ Geofence Verified'}
                   </span>
                 </div>
@@ -397,7 +397,7 @@ export default function StudentScanPage() {
                       alt="Scanner guide"
                       className="absolute inset-0 h-full w-full object-cover opacity-25"
                     />
-                    <div className="relative z-10 size-16 rounded-full bg-[#6558ee]/30 flex items-center justify-center text-white border border-[#6558ee]/40 backdrop-blur-md">
+                    <div className="relative z-10 size-16 rounded-2xl bg-[#6558ee]/20 flex items-center justify-center text-white border border-white/10 shadow-sm">
                       <QrCode className="size-8 text-white" />
                     </div>
                     <div className="relative z-10">

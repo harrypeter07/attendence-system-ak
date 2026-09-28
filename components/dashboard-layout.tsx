@@ -110,12 +110,12 @@ export function DashboardLayout({
   }
 
   const roleLabel = role === 'admin' ? 'Administrator' : role === 'teacher' ? 'Faculty Instructor' : 'Student'
-  const roleBadgeColor =
+  const roleBadgeStyle =
     role === 'admin'
-      ? 'bg-rose-500/20 text-rose-200 border-rose-500/30'
+      ? 'bg-rose-500/15 text-rose-200 border-rose-500/30'
       : role === 'teacher'
-      ? 'bg-violet-500/20 text-violet-200 border-violet-500/30'
-      : 'bg-emerald-500/20 text-emerald-200 border-emerald-500/30'
+      ? 'bg-violet-500/15 text-violet-200 border-violet-500/30'
+      : 'bg-emerald-500/15 text-emerald-200 border-emerald-500/30'
 
   return (
     <div className="flex min-h-screen bg-[#f3f7f9] text-[#24345f]">
@@ -149,13 +149,13 @@ export function DashboardLayout({
 
         {/* User Badge Info */}
         <div className="border-b border-white/10 px-6 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <p className="truncate text-xs font-semibold text-white">
-              {user?.fullName || (role === 'admin' ? 'Arthur Vance' : role === 'teacher' ? 'Sarah Wilson' : 'Ava Martinez')}
+              {user?.fullName || roleLabel}
             </p>
-            <Badge variant="outline" className={`text-[10px] uppercase tracking-wider ${roleBadgeColor}`}>
+            <span className={`rounded px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider border ${roleBadgeStyle}`}>
               {role}
-            </Badge>
+            </span>
           </div>
           <p className="mt-0.5 truncate text-[11px] text-slate-400">{user?.email || `${role}@attendly.edu`}</p>
         </div>
@@ -180,9 +180,9 @@ export function DashboardLayout({
                 <Icon className="size-4 shrink-0" />
                 <span className="flex-1">{item.label}</span>
                 {item.badge && (
-                  <Badge className="bg-emerald-500/20 text-[10px] font-semibold text-emerald-300 border-emerald-500/30">
+                  <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-medium text-emerald-300 border border-emerald-500/30">
                     {item.badge}
-                  </Badge>
+                  </span>
                 )}
               </Link>
             )

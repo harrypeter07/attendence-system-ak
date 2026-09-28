@@ -269,7 +269,7 @@ export default function LiveAttendanceRoomPage() {
                     <p className="text-[11px] text-slate-300">Rotating token prevents photo sharing & proxy scans</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 rounded-full bg-black/30 px-3 py-1 text-xs font-mono font-bold text-amber-300">
+                <div className="flex items-center gap-1.5 rounded-md bg-black/30 px-2.5 py-1 text-xs font-mono font-semibold text-amber-300">
                   <Clock className="size-3.5" />
                   <span>{countdown}s</span>
                 </div>
@@ -305,7 +305,7 @@ export default function LiveAttendanceRoomPage() {
                     </div>
 
                     <div className="flex flex-col items-center gap-1">
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-[#6558ee]">
+                      <span className="inline-flex items-center gap-1.5 rounded-md bg-violet-50 px-2.5 py-1 text-xs font-medium text-[#6558ee]">
                         <RefreshCw className="size-3 animate-spin" /> Rotates automatically every 15s
                       </span>
                       <p className="text-xs text-slate-500">
@@ -371,7 +371,7 @@ export default function LiveAttendanceRoomPage() {
                   <CardTitle className="text-base">Realtime Attendance Roster</CardTitle>
                   <CardDescription className="text-xs">Students verified for this session</CardDescription>
                 </div>
-                <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
+                <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
                   {session?.attendees?.length || 0} Present
                 </span>
               </CardHeader>

@@ -185,8 +185,8 @@ export default function LoginPage() {
 
         {/* Middle Value Proposition with Floating Visual Card */}
         <div className="relative z-10 max-w-lg space-y-6">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-xs font-semibold text-emerald-300 backdrop-blur-md">
-            <Sparkles className="size-3.5" /> Next-Gen Attendance Architecture
+          <div className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-200">
+            <ShieldCheck className="size-3.5 text-emerald-400" /> Enterprise Campus Attendance
           </div>
 
           <h1 className="text-5xl font-extrabold leading-[1.12] tracking-tight">

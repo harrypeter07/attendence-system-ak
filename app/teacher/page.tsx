@@ -61,8 +61,8 @@ export default function TeacherDashboardPage() {
             style={{ maskImage: 'linear-gradient(to right, transparent, black)' }}
           />
           <div className="relative z-10 max-w-xl">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-violet-300 backdrop-blur-sm">
-              <ShieldCheck className="size-3.5" /> Faculty Instructor Portal
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-white/10 px-2.5 py-1 text-xs font-medium text-slate-200">
+              <ShieldCheck className="size-3.5 text-violet-300" /> Faculty Instructor Portal
             </span>
             <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
               Class Attendance Control
@@ -192,7 +192,7 @@ export default function TeacherDashboardPage() {
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full">
+                          <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-md">
                             {c.enrolledCount} Students
                           </span>
                           <Link href={`/teacher/attendance/new?classId=${c.id}`}>
