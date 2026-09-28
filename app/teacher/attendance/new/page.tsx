@@ -111,13 +111,31 @@ export default function NewAttendanceSessionPage() {
 
   async function handleStartSession(e: React.FormEvent) {
     e.preventDefault()
+    setError('')
+
     if (!selectedClassId) {
       setError('Please select a class.')
       return
     }
 
+    const lat = Number(latitude)
+    const lng = Number(longitude)
+    const rad = Number(radiusMeters)
+
+    if (isNaN(lat) || lat < -90 || lat > 90) {
+      setError('Please provide a valid classroom latitude (-90 to 90).')
+      return
+    }
+    if (isNaN(lng) || lng < -180 || lng > 180) {
+      setError('Please provide a valid classroom longitude (-180 to 180).')
+      return
+    }
+    if (isNaN(rad) || rad < 10 || rad > 1000) {
+      setError('Classroom geofence radius must be between 10 and 1000 meters.')
+      return
+    }
+
     setSubmitting(true)
-    setError('')
 
     try {
       const response = await fetch('/api/teacher/sessions', {
@@ -125,9 +143,9 @@ export default function NewAttendanceSessionPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           classId: selectedClassId,
-          latitude: Number(latitude),
-          longitude: Number(longitude),
-          radiusMeters: Number(radiusMeters),
+          latitude: lat,
+          longitude: lng,
+          radiusMeters: rad,
         }),
       })
 

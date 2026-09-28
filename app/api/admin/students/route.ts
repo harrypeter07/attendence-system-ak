@@ -43,10 +43,14 @@ export async function GET() {
 
     // Fetch attendance stats for each student
     const studentIds = (students || []).map((s) => s.id)
-    const { data: records } = await admin
-      .from('attendance_records')
-      .select('student_id, status')
-      .in('student_id', studentIds)
+    let records: any[] = []
+    if (studentIds.length > 0) {
+      const { data } = await admin
+        .from('attendance_records')
+        .select('student_id, status')
+        .in('student_id', studentIds)
+      records = data || []
+    }
 
     const presentMap: Record<string, number> = {}
     for (const r of records || []) {

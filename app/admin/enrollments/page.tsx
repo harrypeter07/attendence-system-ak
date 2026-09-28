@@ -86,8 +86,18 @@ export default function AdminEnrollmentsPage() {
 
   async function handleEnroll(e: React.FormEvent) {
     e.preventDefault()
-    setSubmitting(true)
     setError('')
+
+    if (!selectedStudentId) {
+      setError('Please select a student to enroll.')
+      return
+    }
+    if (!selectedClassId) {
+      setError('Please select a target class section.')
+      return
+    }
+
+    setSubmitting(true)
     try {
       const res = await fetch('/api/admin/enrollments', {
         method: 'POST',
@@ -111,8 +121,18 @@ export default function AdminEnrollmentsPage() {
 
   async function handleAssignTeacher(e: React.FormEvent) {
     e.preventDefault()
-    setSubmitting(true)
     setError('')
+
+    if (!selectedTeacherId) {
+      setError('Please select an instructor.')
+      return
+    }
+    if (!selectedClassId) {
+      setError('Please select a target class section.')
+      return
+    }
+
+    setSubmitting(true)
     try {
       const res = await fetch('/api/admin/teacher-assignments', {
         method: 'POST',

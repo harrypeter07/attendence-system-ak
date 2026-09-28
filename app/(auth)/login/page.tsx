@@ -42,14 +42,34 @@ export default function LoginPage() {
 
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault()
-    setLoading(true)
     setError('')
+
+    const trimmedEmail = email.trim()
+    if (!trimmedEmail) {
+      setError('Please enter your email address.')
+      return
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(trimmedEmail)) {
+      setError('Please enter a valid email address.')
+      return
+    }
+    if (!password) {
+      setError('Please enter your password.')
+      return
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.')
+      return
+    }
+
+    setLoading(true)
 
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password }),
+        body: JSON.stringify({ email: trimmedEmail, password }),
       })
 
       const result = await response.json()
@@ -77,19 +97,42 @@ export default function LoginPage() {
 
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault()
-    setLoading(true)
     setError('')
+
+    const trimmedName = fullName.trim()
+    const trimmedEmail = email.trim()
+    const trimmedId = identifier.trim()
+
+    if (!trimmedName || trimmedName.length < 2) {
+      setError('Please enter your full name (minimum 2 characters).')
+      return
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
+      setError('Please enter a valid institutional email address.')
+      return
+    }
+    if (!password || password.length < 6) {
+      setError('Password must be at least 6 characters long.')
+      return
+    }
+    if (role === 'student' && !trimmedId) {
+      setError('Please enter your Student ID or Roll Number.')
+      return
+    }
+
+    setLoading(true)
 
     try {
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fullName: fullName.trim(),
-          email: email.trim(),
+          fullName: trimmedName,
+          email: trimmedEmail,
           password,
           role,
-          identifier: identifier.trim() || undefined,
+          identifier: trimmedId || undefined,
         }),
       })
 
@@ -100,7 +143,7 @@ export default function LoginPage() {
         return
       }
 
-      const target = result.redirectTo || (role === 'admin' ? '/admin' : role === 'teacher' ? '/teacher' : '/student')
+      const target = result.redirectTo || (role === 'teacher' ? '/teacher' : '/student')
       router.push(target)
       router.refresh()
     } catch {
@@ -114,13 +157,13 @@ export default function LoginPage() {
 
   return (
     <main className="flex min-h-screen bg-[#f1f5f9] text-[#1e293b]">
-      {/* Visual Brand Panel with AI Generated Imagery (Left on Desktop) */}
+      {/* Visual Brand Panel (Left on Desktop) */}
       <section className="relative hidden overflow-hidden lg:flex lg:w-[48%] lg:flex-col lg:justify-between bg-[#0b0f19] p-10 text-white">
         {/* Background Image with Rich Deep Gradient Overlay */}
         <div className="absolute inset-0">
           <img
             src="/images/login-hero.jpg"
-            alt="Futuristic Holographic Smart Attendance Classroom"
+            alt="Smart Campus Attendance Environment"
             className="size-full object-cover object-center opacity-40 brightness-95 filter transition-transform duration-10000 hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0b0f19] via-[#0b0f19]/75 to-transparent" />
@@ -176,7 +219,7 @@ export default function LoginPage() {
               </div>
               <div className="rounded-lg bg-white/5 p-2">
                 <p className="font-bold text-white">Audit Trail</p>
-                <p className="text-[10px] text-slate-400">Postgres logged</p>
+                <p className="text-[10px] text-slate-400">Secure record</p>
               </div>
             </div>
           </div>
@@ -356,7 +399,7 @@ export default function LoginPage() {
                   <Input
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="e.g. Alex Johnson"
+                    placeholder="Enter your full name"
                     className="mt-1 text-xs"
                     required
                   />
@@ -368,7 +411,7 @@ export default function LoginPage() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@institution.edu"
+                    placeholder="Enter your institutional email"
                     className="mt-1 text-xs"
                     required
                   />
@@ -381,7 +424,7 @@ export default function LoginPage() {
                   <Input
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder={role === 'student' ? 'e.g. STU-20901' : 'e.g. EMP-109'}
+                    placeholder={role === 'student' ? 'Student ID or Roll Number' : 'Employee or Faculty ID'}
                     className="mt-1 font-mono text-xs"
                   />
                 </div>

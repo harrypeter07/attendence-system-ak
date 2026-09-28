@@ -237,11 +237,18 @@ export default function StudentScanPage() {
 
   function handleManualSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!manualSessionId || !manualToken) {
-      setResultMessage('Please enter both Session ID and Token.')
+    const sId = manualSessionId.trim()
+    const tok = manualToken.trim()
+
+    if (!sId) {
+      setResultMessage('Please enter a valid Session ID.')
       return
     }
-    submitVerification(manualSessionId.trim(), manualToken.trim())
+    if (!tok || tok.length < 16) {
+      setResultMessage('Please enter a valid attendance QR token.')
+      return
+    }
+    submitVerification(sId, tok)
   }
 
   function resetToScanAgain() {

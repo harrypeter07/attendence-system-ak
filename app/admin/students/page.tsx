@@ -50,7 +50,7 @@ export default function AdminStudentsPage() {
   // Form states
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('StudentPass123!')
+  const [password, setPassword] = useState('')
   const [studentId, setStudentId] = useState('')
   const [departmentId, setDepartmentId] = useState('')
 
@@ -81,19 +81,42 @@ export default function AdminStudentsPage() {
 
   async function handleCreateStudent(e: React.FormEvent) {
     e.preventDefault()
-    setSubmitting(true)
     setError('')
     setNotice('')
+
+    const trimmedName = fullName.trim()
+    const trimmedEmail = email.trim()
+    const trimmedStudentId = studentId.trim()
+
+    if (!trimmedName || trimmedName.length < 2) {
+      setError('Please enter student full name (at least 2 characters).')
+      return
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
+      setError('Please enter a valid student email address.')
+      return
+    }
+    if (!trimmedStudentId) {
+      setError('Please enter a valid Student ID / Roll Number.')
+      return
+    }
+    if (!password || password.length < 6) {
+      setError('Password must be at least 6 characters.')
+      return
+    }
+
+    setSubmitting(true)
 
     try {
       const res = await fetch('/api/admin/students', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fullName,
-          email,
+          fullName: trimmedName,
+          email: trimmedEmail,
           password,
-          studentId,
+          studentId: trimmedStudentId,
           departmentId: departmentId || null,
         }),
       })
@@ -280,7 +303,7 @@ export default function AdminStudentsPage() {
                 <div>
                   <CardTitle className="text-lg">Add New Student</CardTitle>
                   <CardDescription className="text-xs">
-                    Creates Supabase Auth credentials & institutional profile
+                    Create a verified institutional account and student profile
                   </CardDescription>
                 </div>
                 <Button
@@ -297,7 +320,7 @@ export default function AdminStudentsPage() {
                 <CardContent className="space-y-4 p-5">
                   {error && (
                     <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs text-rose-700 border border-rose-200">
-                      <ShieldAlert className="size-4 shrink-0" />
+                      <ShieldAlert className="size-4 shrink-0 text-rose-600" />
                       <span>{error}</span>
                     </div>
                   )}
@@ -307,7 +330,7 @@ export default function AdminStudentsPage() {
                     <Input
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      placeholder="e.g. Liam Davis"
+                      placeholder="Student full name"
                       className="mt-1"
                       required
                     />
@@ -319,7 +342,7 @@ export default function AdminStudentsPage() {
                       <Input
                         value={studentId}
                         onChange={(e) => setStudentId(e.target.value)}
-                        placeholder="e.g. STU-20491"
+                        placeholder="Student ID or Roll Number"
                         className="mt-1 font-mono"
                         required
                       />
@@ -346,7 +369,7 @@ export default function AdminStudentsPage() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="student@attendly.edu"
+                      placeholder="student@institution.edu"
                       className="mt-1"
                       required
                     />
@@ -358,11 +381,12 @@ export default function AdminStudentsPage() {
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Initial password (min. 6 characters)"
                       className="mt-1"
                       minLength={6}
                       required
                     />
-                    <p className="mt-1 text-[11px] text-slate-400">Default: StudentPass123!</p>
+                    <p className="mt-1 text-[11px] text-slate-400">Must be at least 6 characters</p>
                   </div>
                 </CardContent>
 

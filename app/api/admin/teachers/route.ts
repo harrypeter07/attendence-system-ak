@@ -43,17 +43,21 @@ export async function GET() {
 
     // Fetch class assignments for each teacher
     const teacherIds = (teachers || []).map((t) => t.id)
-    const { data: assignments } = await admin
-      .from('teacher_assignments')
-      .select(`
-        teacher_id,
-        class:classes (
-          id,
-          name,
-          course:courses (code, name)
-        )
-      `)
-      .in('teacher_id', teacherIds)
+    let assignments: any[] = []
+    if (teacherIds.length > 0) {
+      const { data } = await admin
+        .from('teacher_assignments')
+        .select(`
+          teacher_id,
+          class:classes (
+            id,
+            name,
+            course:courses (code, name)
+          )
+        `)
+        .in('teacher_id', teacherIds)
+      assignments = data || []
+    }
 
     const assignmentMap: Record<string, any[]> = {}
     for (const a of assignments || []) {

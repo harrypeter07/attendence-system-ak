@@ -197,9 +197,9 @@ export function DashboardLayout({
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
               </span>
-              <p className="text-[11px] font-medium text-emerald-400">Connected to Supabase</p>
+              <p className="text-[11px] font-medium text-emerald-400">Campus Network Active</p>
             </div>
-            <p className="mt-1 text-[11px] text-slate-400">15s dynamic QR rotation active</p>
+            <p className="mt-1 text-[11px] text-slate-400">Real-time attendance active</p>
           </div>
 
           <Button

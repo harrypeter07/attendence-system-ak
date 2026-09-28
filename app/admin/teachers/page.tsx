@@ -51,7 +51,7 @@ export default function AdminTeachersPage() {
   // Form states
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('TeacherPass123!')
+  const [password, setPassword] = useState('')
   const [employeeId, setEmployeeId] = useState('')
   const [departmentId, setDepartmentId] = useState('')
 
@@ -82,19 +82,42 @@ export default function AdminTeachersPage() {
 
   async function handleCreateTeacher(e: React.FormEvent) {
     e.preventDefault()
-    setSubmitting(true)
     setError('')
     setNotice('')
+
+    const trimmedName = fullName.trim()
+    const trimmedEmail = email.trim()
+    const trimmedEmployeeId = employeeId.trim()
+
+    if (!trimmedName || trimmedName.length < 2) {
+      setError('Please enter faculty member full name (at least 2 characters).')
+      return
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
+      setError('Please enter a valid institutional email address.')
+      return
+    }
+    if (!trimmedEmployeeId) {
+      setError('Please enter a valid Employee / Faculty ID.')
+      return
+    }
+    if (!password || password.length < 6) {
+      setError('Password must be at least 6 characters.')
+      return
+    }
+
+    setSubmitting(true)
 
     try {
       const res = await fetch('/api/admin/teachers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fullName,
-          email,
+          fullName: trimmedName,
+          email: trimmedEmail,
           password,
-          employeeId,
+          employeeId: trimmedEmployeeId,
           departmentId: departmentId || null,
         }),
       })
@@ -317,7 +340,7 @@ export default function AdminTeachersPage() {
                     <Input
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      placeholder="e.g. Dr. Arthur Pendelton"
+                      placeholder="Faculty member full name"
                       className="mt-1"
                       required
                     />
@@ -329,7 +352,7 @@ export default function AdminTeachersPage() {
                       <Input
                         value={employeeId}
                         onChange={(e) => setEmployeeId(e.target.value)}
-                        placeholder="e.g. EMP-204"
+                        placeholder="Employee or Faculty ID"
                         className="mt-1 font-mono"
                         required
                       />
@@ -356,7 +379,7 @@ export default function AdminTeachersPage() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="faculty@attendly.edu"
+                      placeholder="faculty@institution.edu"
                       className="mt-1"
                       required
                     />
@@ -368,11 +391,12 @@ export default function AdminTeachersPage() {
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Initial password (min. 6 characters)"
                       className="mt-1"
                       minLength={6}
                       required
                     />
-                    <p className="mt-1 text-[11px] text-slate-400">Default: TeacherPass123!</p>
+                    <p className="mt-1 text-[11px] text-slate-400">Must be at least 6 characters</p>
                   </div>
                 </CardContent>
 

@@ -69,17 +69,44 @@ export default function AdminCoursesPage() {
 
   async function handleCreateCourse(e: React.FormEvent) {
     e.preventDefault()
-    setSubmitting(true)
     setError('')
+
+    const trimmedCode = code.trim().toUpperCase()
+    const trimmedName = name.trim()
+    const numCredits = Number(credits)
+
+    if (!departmentId) {
+      setError('Please select an academic department.')
+      return
+    }
+    if (!trimmedCode || trimmedCode.length < 2) {
+      setError('Please enter a valid course code (e.g. CS101).')
+      return
+    }
+    if (!trimmedName || trimmedName.length < 2) {
+      setError('Please enter a course title (minimum 2 characters).')
+      return
+    }
+    if (isNaN(numCredits) || numCredits < 1 || numCredits > 10) {
+      setError('Credits must be between 1 and 10.')
+      return
+    }
+
+    setSubmitting(true)
     try {
       const res = await fetch('/api/admin/courses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ departmentId, code, name, credits: Number(credits) }),
+        body: JSON.stringify({
+          departmentId,
+          code: trimmedCode,
+          name: trimmedName,
+          credits: numCredits,
+        }),
       })
       const data = await res.json()
       if (res.ok && data.ok) {
-        setNotice(`Course ${code} created.`)
+        setNotice(`Course ${trimmedCode} created.`)
         setShowCourseModal(false)
         setCode('')
         setName('')
@@ -96,17 +123,30 @@ export default function AdminCoursesPage() {
 
   async function handleCreateDept(e: React.FormEvent) {
     e.preventDefault()
-    setSubmitting(true)
     setError('')
+
+    const trimmedDeptName = deptName.trim()
+    const trimmedDeptCode = deptCode.trim().toUpperCase()
+
+    if (!trimmedDeptName || trimmedDeptName.length < 2) {
+      setError('Please enter a department name (minimum 2 characters).')
+      return
+    }
+    if (!trimmedDeptCode || trimmedDeptCode.length < 2 || trimmedDeptCode.length > 10) {
+      setError('Department code must be 2 to 10 characters (e.g. CSE).')
+      return
+    }
+
+    setSubmitting(true)
     try {
       const res = await fetch('/api/admin/departments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: deptName, code: deptCode }),
+        body: JSON.stringify({ name: trimmedDeptName, code: trimmedDeptCode }),
       })
       const data = await res.json()
       if (res.ok && data.ok) {
-        setNotice(`Department ${deptName} created.`)
+        setNotice(`Department ${trimmedDeptName} created.`)
         setShowDeptModal(false)
         setDeptName('')
         setDeptCode('')
