@@ -56,15 +56,20 @@ export default function StudentDashboardPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/student/dashboard')
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.ok && res.data) {
-          setData(res.data)
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/api/student/dashboard')
+        const json = await res.json()
+        if (json.ok && json.data) {
+          setData(json.data)
         }
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false))
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadDashboard()
   }, [])
 
   if (loading) {

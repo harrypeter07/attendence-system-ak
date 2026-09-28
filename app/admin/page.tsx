@@ -58,15 +58,20 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/admin/dashboard')
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.ok && res.data) {
-          setData(res.data)
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/api/admin/dashboard')
+        const json = await res.json()
+        if (json.ok && json.data) {
+          setData(json.data)
         }
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false))
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadDashboard()
   }, [])
 
   return (

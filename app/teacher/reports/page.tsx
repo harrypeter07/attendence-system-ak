@@ -22,13 +22,18 @@ export default function TeacherReportsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/admin/reports')
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.ok) setData(res.data)
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false))
+    async function loadReports() {
+      try {
+        const res = await fetch('/api/admin/reports')
+        const json = await res.json()
+        if (json.ok) setData(json.data)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadReports()
   }, [])
 
   function downloadCsv() {

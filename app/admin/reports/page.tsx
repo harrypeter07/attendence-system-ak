@@ -39,14 +39,17 @@ export default function AdminReportsPage() {
   }
 
   useEffect(() => {
-    fetch('/api/admin/classes')
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.ok) setClasses(res.data || [])
-      })
-      .catch(console.error)
-
-    loadReports()
+    async function init() {
+      try {
+        const res = await fetch('/api/admin/classes')
+        const classRes = await res.json()
+        if (classRes.ok) setClasses(classRes.data || [])
+      } catch (err) {
+        console.error(err)
+      }
+      await loadReports()
+    }
+    init()
   }, [])
 
   function handleFilterClass(classId: string) {

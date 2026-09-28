@@ -51,26 +51,29 @@ export default function NewAttendanceSessionPage() {
   const [error, setError] = useState<string>('')
 
   useEffect(() => {
-    fetch('/api/teacher/classes')
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.ok && res.data) {
-          setClasses(res.data)
-          if (res.data.length > 0) {
-            setSelectedClassId(res.data[0].id)
-            if (res.data[0].location) {
-              setLatitude(Number(res.data[0].location.latitude) || 12.9716)
-              setLongitude(Number(res.data[0].location.longitude) || 77.5946)
-              setRadiusMeters(res.data[0].location.radius_meters || 100)
+    async function loadClasses() {
+      try {
+        const res = await fetch('/api/teacher/classes')
+        const json = await res.json()
+        if (json.ok && json.data) {
+          setClasses(json.data)
+          if (json.data.length > 0) {
+            setSelectedClassId(json.data[0].id)
+            if (json.data[0].location) {
+              setLatitude(Number(json.data[0].location.latitude) || 12.9716)
+              setLongitude(Number(json.data[0].location.longitude) || 77.5946)
+              setRadiusMeters(json.data[0].location.radius_meters || 100)
             }
           }
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error(err)
         setError('Failed to load assigned classes')
-      })
-      .finally(() => setLoading(false))
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadClasses()
   }, [])
 
   function handleClassChange(classId: string) {

@@ -25,13 +25,18 @@ export default function TeacherSessionsPage() {
   const [query, setQuery] = useState('')
 
   useEffect(() => {
-    fetch('/api/teacher/sessions')
-      .then((res) => res.json())
-      .then((data) => {
+    async function loadSessions() {
+      try {
+        const res = await fetch('/api/teacher/sessions')
+        const data = await res.json()
         if (data.ok) setSessions(data.data || [])
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false))
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadSessions()
   }, [])
 
   const filtered = sessions.filter(

@@ -81,15 +81,20 @@ export function DashboardLayout({
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/auth/session')
-      .then((res) => res.json())
-      .then((data) => {
+    async function loadSession() {
+      try {
+        const res = await fetch('/api/auth/session')
+        const data = await res.json()
         if (data.authenticated && data.user) {
           setUser(data.user)
         }
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false))
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadSession()
   }, [])
 
   const navItems = role === 'admin' ? adminNav : role === 'teacher' ? teacherNav : studentNav

@@ -31,19 +31,24 @@ export default function AdminSettingsPage() {
   const [tokenRotationSeconds, setTokenRotationSeconds] = useState(15)
 
   useEffect(() => {
-    fetch('/api/admin/settings')
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.ok && res.data) {
-          setInstitutionName(res.data.institutionName || 'Attendly Institute of Technology')
-          setDefaultRadius(res.data.defaultRadiusMeters || 100)
-          setDefaultLat(res.data.defaultLatitude || 12.9716)
-          setDefaultLng(res.data.defaultLongitude || 77.5946)
-          setTokenRotationSeconds(res.data.tokenRotationSeconds || 15)
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/admin/settings')
+        const data = await res.json()
+        if (data.ok && data.data) {
+          setInstitutionName(data.data.institutionName || 'Attendly Institute of Technology')
+          setDefaultRadius(data.data.defaultRadiusMeters || 100)
+          setDefaultLat(data.data.defaultLatitude || 12.9716)
+          setDefaultLng(data.data.defaultLongitude || 77.5946)
+          setTokenRotationSeconds(data.data.tokenRotationSeconds || 15)
         }
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false))
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadSettings()
   }, [])
 
   async function handleSave(e: React.FormEvent) {

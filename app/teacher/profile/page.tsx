@@ -27,16 +27,21 @@ export default function TeacherProfilePage() {
   const [notice, setNotice] = useState('')
 
   useEffect(() => {
-    fetch('/api/student/profile')
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.ok && res.data) {
-          setProfile(res.data)
-          setPhone(res.data.phone || '')
+    async function loadProfile() {
+      try {
+        const res = await fetch('/api/student/profile')
+        const json = await res.json()
+        if (json.ok && json.data) {
+          setProfile(json.data)
+          setPhone(json.data.phone || '')
         }
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false))
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadProfile()
   }, [])
 
   async function handleSave(e: React.FormEvent) {

@@ -22,13 +22,18 @@ export default function TeacherClassesPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/teacher/classes')
-      .then((res) => res.json())
-      .then((data) => {
+    async function loadClasses() {
+      try {
+        const res = await fetch('/api/teacher/classes')
+        const data = await res.json()
         if (data.ok) setClasses(data.data || [])
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false))
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadClasses()
   }, [])
 
   return (

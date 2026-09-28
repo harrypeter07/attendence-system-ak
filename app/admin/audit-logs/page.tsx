@@ -24,13 +24,18 @@ export default function AdminAuditLogsPage() {
   const [query, setQuery] = useState('')
 
   useEffect(() => {
-    fetch('/api/admin/audit-logs')
-      .then((res) => res.json())
-      .then((data) => {
+    async function loadLogs() {
+      try {
+        const res = await fetch('/api/admin/audit-logs')
+        const data = await res.json()
         if (data.ok) setLogs(data.data || [])
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false))
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadLogs()
   }, [])
 
   const filtered = logs.filter(

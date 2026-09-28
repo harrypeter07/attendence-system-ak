@@ -41,15 +41,20 @@ export default function StudentCoursesPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/student/courses')
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.ok && res.data) {
-          setCourses(res.data)
+    async function loadCourses() {
+      try {
+        const res = await fetch('/api/student/courses')
+        const json = await res.json()
+        if (json.ok && json.data) {
+          setCourses(json.data)
         }
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false))
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadCourses()
   }, [])
 
   return (

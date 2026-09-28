@@ -38,15 +38,20 @@ export default function StudentAttendanceHistoryPage() {
   const [query, setQuery] = useState('')
 
   useEffect(() => {
-    fetch('/api/student/attendance')
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.ok && res.data) {
-          setRecords(res.data)
+    async function loadAttendance() {
+      try {
+        const res = await fetch('/api/student/attendance')
+        const json = await res.json()
+        if (json.ok && json.data) {
+          setRecords(json.data)
         }
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false))
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadAttendance()
   }, [])
 
   const filtered = records.filter(

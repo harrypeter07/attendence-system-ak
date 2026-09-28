@@ -37,7 +37,7 @@ export default function LoginPage() {
 
   // Signup fields
   const [fullName, setFullName] = useState('')
-  const [role, setRole] = useState<'student' | 'teacher' | 'admin'>('student')
+  const [role, setRole] = useState<'student' | 'teacher'>('student')
   const [identifier, setIdentifier] = useState('') // Student ID or Employee ID
 
   async function handleSignIn(e: React.FormEvent) {
@@ -110,12 +110,7 @@ export default function LoginPage() {
     }
   }
 
-  function fillDemo(userEmail: string, userPass: string) {
-    setMode('signin')
-    setEmail(userEmail)
-    setPassword(userPass)
-    setError('')
-  }
+
 
   return (
     <main className="flex min-h-screen bg-[#f1f5f9] text-[#1e293b]">
@@ -250,47 +245,12 @@ export default function LoginPage() {
             </CardTitle>
             <CardDescription className="text-xs text-slate-500">
               {mode === 'signin'
-                ? 'Select a demo account or sign in with your email'
-                : 'Select your role and create a new institutional account'}
+                ? 'Enter your institutional email and password to access your dashboard'
+                : 'Create your academic profile to get started'}
             </CardDescription>
           </CardHeader>
 
           <CardContent className="p-6 pt-2 sm:p-8 sm:pt-2 space-y-4">
-            {/* Quick Demo Credentials Bar (Visible on Sign In) */}
-            {mode === 'signin' && (
-              <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">
-                  One-Click Demo Fill:
-                </p>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => fillDemo('admin@attendly.edu', 'AdminPassword123!')}
-                    className="rounded-lg border border-slate-200 bg-white p-2 text-center text-xs font-semibold text-slate-700 hover:border-[#6558ee] hover:bg-[#6558ee]/5 transition-colors"
-                  >
-                    <ShieldCheck className="mx-auto size-3.5 text-rose-500 mb-1" />
-                    Admin
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => fillDemo('teacher@attendly.edu', 'TeacherPassword123!')}
-                    className="rounded-lg border border-slate-200 bg-white p-2 text-center text-xs font-semibold text-slate-700 hover:border-[#6558ee] hover:bg-[#6558ee]/5 transition-colors"
-                  >
-                    <Users className="mx-auto size-3.5 text-violet-500 mb-1" />
-                    Teacher
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => fillDemo('student@attendly.edu', 'StudentPassword123!')}
-                    className="rounded-lg border border-slate-200 bg-white p-2 text-center text-xs font-semibold text-slate-700 hover:border-[#6558ee] hover:bg-[#6558ee]/5 transition-colors"
-                  >
-                    <GraduationCap className="mx-auto size-3.5 text-emerald-500 mb-1" />
-                    Student
-                  </button>
-                </div>
-              </div>
-            )}
-
             {error && (
               <div className="flex items-center gap-2.5 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">
                 <ShieldAlert className="size-4 shrink-0 text-rose-600" />
@@ -362,12 +322,12 @@ export default function LoginPage() {
               <form onSubmit={handleSignUp} className="space-y-3">
                 {/* Role Selector */}
                 <div>
-                  <label className="text-xs font-semibold text-slate-700">Select Role</label>
-                  <div className="mt-1 grid grid-cols-3 gap-2">
+                  <label className="text-xs font-semibold text-slate-700">Account Type</label>
+                  <div className="mt-1 grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       onClick={() => setRole('student')}
-                      className={`rounded-lg border p-2 text-center text-xs font-semibold transition-all ${
+                      className={`rounded-lg border p-2.5 text-center text-xs font-semibold transition-all ${
                         role === 'student'
                           ? 'border-[#6558ee] bg-[#6558ee]/10 text-[#6558ee]'
                           : 'border-slate-200 text-slate-600 hover:bg-slate-50'
@@ -379,26 +339,14 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setRole('teacher')}
-                      className={`rounded-lg border p-2 text-center text-xs font-semibold transition-all ${
+                      className={`rounded-lg border p-2.5 text-center text-xs font-semibold transition-all ${
                         role === 'teacher'
                           ? 'border-[#6558ee] bg-[#6558ee]/10 text-[#6558ee]'
                           : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                       }`}
                     >
                       <Users className="mx-auto size-4 mb-1" />
-                      Teacher
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRole('admin')}
-                      className={`rounded-lg border p-2 text-center text-xs font-semibold transition-all ${
-                        role === 'admin'
-                          ? 'border-[#6558ee] bg-[#6558ee]/10 text-[#6558ee]'
-                          : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                      }`}
-                    >
-                      <ShieldCheck className="mx-auto size-4 mb-1" />
-                      Admin
+                      Faculty / Instructor
                     </button>
                   </div>
                 </div>
