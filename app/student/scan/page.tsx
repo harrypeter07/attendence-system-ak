@@ -384,17 +384,22 @@ export default function StudentScanPage() {
                 <div id="qr-reader-container" className="w-full h-full" />
 
                 {scanState === 'idle' && (
-                  <div className="absolute inset-0 bg-slate-900/90 flex flex-col items-center justify-center p-6 text-center text-white gap-4">
-                    <div className="size-16 rounded-full bg-[#6558ee]/20 flex items-center justify-center text-[#6558ee] border border-[#6558ee]/30">
-                      <QrCode className="size-8" />
+                  <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-xs flex flex-col items-center justify-center p-6 text-center text-white gap-4 overflow-hidden">
+                    <img
+                      src="/images/scanner-mockup.jpg"
+                      alt="Scanner guide"
+                      className="absolute inset-0 h-full w-full object-cover opacity-25"
+                    />
+                    <div className="relative z-10 size-16 rounded-full bg-[#6558ee]/30 flex items-center justify-center text-white border border-[#6558ee]/40 backdrop-blur-md">
+                      <QrCode className="size-8 text-white" />
                     </div>
-                    <div>
-                      <h4 className="font-semibold text-sm">Ready to Scan</h4>
-                      <p className="text-xs text-slate-400 mt-1">Tap below to activate your camera</p>
+                    <div className="relative z-10">
+                      <h4 className="font-bold text-base">Ready to Scan</h4>
+                      <p className="text-xs text-slate-300 mt-1">Point your camera at the rotating classroom QR display</p>
                     </div>
                     <Button
                       onClick={startScanner}
-                      className="bg-[#6558ee] hover:bg-[#5549d8] text-white rounded-xl font-semibold shadow-md"
+                      className="relative z-10 bg-[#6558ee] hover:bg-[#5549d8] text-white rounded-xl font-bold shadow-lg shadow-[#6558ee]/40 px-6 py-2.5"
                     >
                       <Camera className="size-4 mr-2" /> Open Camera
                     </Button>

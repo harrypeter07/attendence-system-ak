@@ -73,20 +73,26 @@ export default function AdminDashboardPage() {
     <DashboardLayout role="admin">
       <div className="space-y-6">
         {/* Banner */}
-        <div className="flex flex-col justify-between gap-4 rounded-3xl bg-gradient-to-r from-[#1e2746] to-[#2b3558] p-6 text-white shadow-md sm:flex-row sm:items-center sm:p-8">
-          <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-rose-300">
+        <div className="relative overflow-hidden flex flex-col justify-between gap-6 rounded-3xl bg-gradient-to-r from-[#1e2746] to-[#2b3558] p-6 text-white shadow-xl sm:flex-row sm:items-center sm:p-8">
+          <img
+            src="/images/login-hero.jpg"
+            alt="Campus Terminal"
+            className="pointer-events-none absolute right-0 top-0 h-full w-full sm:w-1/2 object-cover opacity-15 sm:opacity-25"
+            style={{ maskImage: 'linear-gradient(to right, transparent, black)' }}
+          />
+          <div className="relative z-10 max-w-xl">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-rose-300 backdrop-blur-sm">
               <ShieldCheck className="size-3.5" /> Institution Control Center
             </span>
             <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
               Campus Attendance Overview
             </h1>
-            <p className="mt-1 text-xs text-slate-300">
+            <p className="mt-1 text-xs text-slate-300 sm:text-sm">
               Live database monitoring across departments, courses, teachers, and student scans.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="relative z-10 flex flex-wrap gap-2 shrink-0">
             <Link href="/admin/students">
               <Button className="h-10 gap-1.5 rounded-xl bg-white text-xs font-semibold text-slate-900 shadow-sm hover:bg-slate-100">
                 <Plus className="size-3.5" /> Add Student

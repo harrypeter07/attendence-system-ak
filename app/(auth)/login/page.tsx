@@ -11,10 +11,11 @@ import {
   Loader2,
   LockKeyhole,
   Mail,
+  MapPin,
+  QrCode,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
-  User,
   Users,
   Zap,
 } from 'lucide-react'
@@ -68,7 +69,7 @@ export default function LoginPage() {
       router.push(target)
       router.refresh()
     } catch {
-      setError('Unable to reach the authentication service. Please check your connection.')
+      setError('Unable to reach authentication service. Please check your connection.')
     } finally {
       setLoading(false)
     }
@@ -117,62 +118,101 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen bg-[#f3f7f9] text-[#24345f]">
-      {/* Visual Brand Panel (Left on Desktop) */}
-      <section className="relative hidden overflow-hidden lg:flex lg:w-[46%] lg:flex-col lg:justify-between bg-[#1e2746] p-12 text-white">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(101,88,238,.35),transparent_40%),radial-gradient(circle_at_90%_80%,rgba(16,185,129,.18),transparent_35%)]" />
+    <main className="flex min-h-screen bg-[#f1f5f9] text-[#1e293b]">
+      {/* Visual Brand Panel with AI Generated Imagery (Left on Desktop) */}
+      <section className="relative hidden overflow-hidden lg:flex lg:w-[48%] lg:flex-col lg:justify-between bg-[#0b0f19] p-10 text-white">
+        {/* Background Image with Rich Deep Gradient Overlay */}
+        <div className="absolute inset-0">
+          <img
+            src="/images/login-hero.jpg"
+            alt="Futuristic Holographic Smart Attendance Classroom"
+            className="size-full object-cover object-center opacity-40 brightness-95 filter transition-transform duration-10000 hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0b0f19] via-[#0b0f19]/75 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0b0f19]/80 via-transparent to-[#0b0f19]" />
+        </div>
 
-        <div className="relative flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-2xl bg-[#6558ee] shadow-lg shadow-[#6558ee]/40">
+        {/* Top Logo */}
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#6558ee] to-violet-400 shadow-lg shadow-[#6558ee]/40">
             <Zap className="size-6 fill-current text-white" />
           </div>
           <div>
-            <p className="text-lg font-bold tracking-tight">Attendly</p>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Smart Attendance System</p>
+            <p className="text-xl font-extrabold tracking-tight">Attendly</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+              Next-Gen Smart Attendance
+            </p>
           </div>
         </div>
 
-        <div className="relative max-w-xl space-y-6">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1 text-xs font-semibold text-emerald-300">
-            <Sparkles className="size-3.5" /> Next-Gen Classroom Security
+        {/* Middle Value Proposition with Floating Visual Card */}
+        <div className="relative z-10 max-w-lg space-y-6">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-xs font-semibold text-emerald-300 backdrop-blur-md">
+            <Sparkles className="size-3.5" /> Next-Gen Attendance Architecture
           </div>
-          <h1 className="text-5xl font-extrabold leading-[1.1] tracking-tight">
+
+          <h1 className="text-5xl font-extrabold leading-[1.12] tracking-tight">
             Every class counted.<br />
-            <span className="text-[#a59dfe]">Every scan verified.</span>
+            <span className="bg-gradient-to-r from-[#a59dfe] via-indigo-300 to-emerald-300 bg-clip-text text-transparent">
+              Every scan verified.
+            </span>
           </h1>
-          <p className="max-w-md text-base leading-7 text-slate-300">
-            15-second dynamic QR token rotation coupled with real-time GPS geofencing. Built for institutions that demand integrity.
+
+          <p className="text-sm leading-relaxed text-slate-300">
+            Cryptographic 15-second dynamic QR token rotation coupled with live GPS classroom geofencing. Built for institutions that demand real-time verification and zero proxy scans.
           </p>
 
-          <div className="space-y-2.5 pt-4 text-xs text-slate-300">
-            <div className="flex items-center gap-2.5">
-              <ShieldCheck className="size-4 text-emerald-400" />
-              <span>Anti-screenshot dynamic QR code rotation</span>
+          {/* Floating Live Feature Preview Badge */}
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md space-y-3">
+            <div className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-2 text-emerald-400 font-semibold">
+                <ShieldCheck className="size-4" /> 15s Dynamic QR Active
+              </span>
+              <span className="font-mono text-[11px] text-slate-400">±100m GPS Geofence</span>
             </div>
-            <div className="flex items-center gap-2.5">
-              <ShieldCheck className="size-4 text-emerald-400" />
-              <span>Server-validated GPS distance check</span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <ShieldCheck className="size-4 text-emerald-400" />
-              <span>Role-based access: Admin, Teacher, and Student</span>
+            <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
+              <div className="rounded-lg bg-white/5 p-2">
+                <p className="font-bold text-white">Anti-Proxy</p>
+                <p className="text-[10px] text-slate-400">Rotating tokens</p>
+              </div>
+              <div className="rounded-lg bg-white/5 p-2">
+                <p className="font-bold text-white">Geofenced</p>
+                <p className="text-[10px] text-slate-400">GPS validated</p>
+              </div>
+              <div className="rounded-lg bg-white/5 p-2">
+                <p className="font-bold text-white">Audit Trail</p>
+                <p className="text-[10px] text-slate-400">Postgres logged</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <p className="relative text-xs text-slate-400">
-          © 2026 Attendly Technologies. Production-ready classroom attendance.
+        {/* Bottom Tagline */}
+        <p className="relative z-10 text-xs text-slate-400">
+          © 2026 Attendly Systems. Built for high-integrity academic institutions.
         </p>
       </section>
 
       {/* Auth Card Panel (Right) */}
       <section className="flex flex-1 items-center justify-center p-4 sm:p-8">
-        <Card className="w-full max-w-md border-slate-200 bg-white shadow-xl">
-          <CardHeader className="p-6 pb-3 sm:p-8 sm:pb-4">
-            <div className="mb-2 flex size-10 items-center justify-center rounded-xl bg-[#6558ee]/10 text-[#6558ee] lg:hidden">
-              <Zap className="size-5 fill-current" />
+        <Card className="w-full max-w-md border-slate-200 bg-white shadow-2xl overflow-hidden">
+          {/* Mobile Header Banner */}
+          <div className="relative h-28 w-full overflow-hidden bg-[#0b0f19] lg:hidden">
+            <img
+              src="/images/login-hero.jpg"
+              alt="Campus Header"
+              className="size-full object-cover opacity-60"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+            <div className="absolute bottom-3 left-4 flex items-center gap-2 text-white">
+              <div className="flex size-7 items-center justify-center rounded-lg bg-[#6558ee]">
+                <Zap className="size-4 fill-current" />
+              </div>
+              <span className="text-sm font-bold">Attendly Smart Portal</span>
             </div>
+          </div>
 
+          <CardHeader className="p-6 pb-2 sm:p-8 sm:pb-3">
             {/* Mode Selector Tabs (Sign In / Register) */}
             <div className="flex rounded-xl bg-slate-100 p-1 mb-2">
               <button
@@ -181,9 +221,9 @@ export default function LoginPage() {
                   setMode('signin')
                   setError('')
                 }}
-                className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-all ${
+                className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-all ${
                   mode === 'signin'
-                    ? 'bg-white text-slate-900 shadow-xs'
+                    ? 'bg-white text-slate-900 shadow-sm'
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
@@ -195,9 +235,9 @@ export default function LoginPage() {
                   setMode('signup')
                   setError('')
                 }}
-                className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-all ${
+                className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-all ${
                   mode === 'signup'
-                    ? 'bg-white text-slate-900 shadow-xs'
+                    ? 'bg-white text-slate-900 shadow-sm'
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
@@ -210,7 +250,7 @@ export default function LoginPage() {
             </CardTitle>
             <CardDescription className="text-xs text-slate-500">
               {mode === 'signin'
-                ? 'Enter your institutional credentials or click a demo account'
+                ? 'Select a demo account or sign in with your email'
                 : 'Select your role and create a new institutional account'}
             </CardDescription>
           </CardHeader>
@@ -250,19 +290,6 @@ export default function LoginPage() {
                 </div>
               </div>
             )}
-
-            {/*
-              ========================================================
-              GOOGLE SIGN IN UI (COMMENTED OUT FOR NOW AS REQUESTED)
-              ========================================================
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full h-10 gap-2 rounded-xl border-slate-200 bg-white font-semibold text-slate-700"
-              >
-                Sign in with Google
-              </Button>
-            */}
 
             {error && (
               <div className="flex items-center gap-2.5 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">
@@ -324,7 +351,7 @@ export default function LoginPage() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-10 gap-2 rounded-xl bg-[#6558ee] font-semibold text-white shadow-md shadow-[#6558ee]/25 hover:bg-[#5549d8]"
+                  className="w-full h-11 gap-2 rounded-xl bg-[#6558ee] font-semibold text-white shadow-md shadow-[#6558ee]/25 hover:bg-[#5549d8]"
                 >
                   {loading ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
                   Sign In to Attendly
@@ -436,7 +463,7 @@ export default function LoginPage() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-10 gap-2 rounded-xl bg-[#6558ee] font-semibold text-white shadow-md shadow-[#6558ee]/25 hover:bg-[#5549d8] mt-2"
+                  className="w-full h-11 gap-2 rounded-xl bg-[#6558ee] font-semibold text-white shadow-md shadow-[#6558ee]/25 hover:bg-[#5549d8] mt-2"
                 >
                   {loading ? <Loader2 className="size-4 animate-spin" /> : null}
                   Register as {role.charAt(0).toUpperCase() + role.slice(1)}

@@ -53,24 +53,32 @@ export default function TeacherDashboardPage() {
     <DashboardLayout role="teacher">
       <div className="space-y-6">
         {/* Banner with Quick Action */}
-        <div className="flex flex-col justify-between gap-4 rounded-3xl bg-gradient-to-r from-[#1e2746] to-[#2c3866] p-6 text-white shadow-md sm:flex-row sm:items-center sm:p-8">
-          <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-violet-300">
+        <div className="relative overflow-hidden flex flex-col justify-between gap-6 rounded-3xl bg-gradient-to-r from-[#1e2746] to-[#2c3866] p-6 text-white shadow-xl sm:flex-row sm:items-center sm:p-8">
+          <img
+            src="/images/teacher-hero.jpg"
+            alt="Classroom Broadcast"
+            className="pointer-events-none absolute right-0 top-0 h-full w-full sm:w-1/2 object-cover opacity-20 sm:opacity-30"
+            style={{ maskImage: 'linear-gradient(to right, transparent, black)' }}
+          />
+          <div className="relative z-10 max-w-xl">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-violet-300 backdrop-blur-sm">
               <ShieldCheck className="size-3.5" /> Faculty Instructor Portal
             </span>
             <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
               Class Attendance Control
             </h1>
-            <p className="mt-1 text-xs text-slate-300">
+            <p className="mt-1 text-xs text-slate-300 sm:text-sm">
               Launch dynamic QR codes with 15-second rotation and automated geofence checks.
             </p>
           </div>
 
-          <Link href="/teacher/attendance/new">
-            <Button className="h-12 gap-2 rounded-2xl bg-[#6558ee] px-6 text-sm font-bold text-white shadow-lg shadow-[#6558ee]/40 transition hover:bg-[#5549d8]">
-              <QrCode className="size-5" /> Start Attendance Session
-            </Button>
-          </Link>
+          <div className="relative z-10 shrink-0">
+            <Link href="/teacher/attendance/new">
+              <Button className="h-12 gap-2 rounded-2xl bg-[#6558ee] px-6 text-sm font-bold text-white shadow-lg shadow-[#6558ee]/40 transition hover:bg-[#5549d8]">
+                <QrCode className="size-5" /> Start Attendance Session
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Active Session Alert Banner if active */}
