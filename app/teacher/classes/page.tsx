@@ -7,11 +7,11 @@ import {
   BookOpen,
   Calendar,
   CheckCircle2,
+  GraduationCap,
   Loader2,
   MapPin,
   Plus,
   QrCode,
-  Sparkles,
   Users,
   X,
 } from 'lucide-react'
@@ -21,13 +21,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 
+interface CatalogCourse {
+  id: string
+  code: string
+  name: string
+  department?: { name: string }
+}
+
 export default function TeacherClassesPage() {
   const [classes, setClasses] = useState<any[]>([])
+  const [catalogCourses, setCatalogCourses] = useState<CatalogCourse[]>([])
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
+
+  // Form mode: 'new' or 'existing'
+  const [courseMode, setCourseMode] = useState<'new' | 'existing'>('new')
+  const [selectedCourseId, setSelectedCourseId] = useState('')
 
   // Form state
   const [courseName, setCourseName] = useState('')
@@ -42,49 +54,92 @@ export default function TeacherClassesPage() {
       const data = await res.json()
       if (data.ok) setClasses(data.data || [])
     } catch (err) {
-      console.error(err)
+      console.error('Error fetching classes:', err)
     } finally {
       setLoading(false)
     }
   }
 
+  async function loadCatalogCourses() {
+    try {
+      const res = await fetch('/api/admin/courses')
+      const data = await res.json()
+      if (data.ok && Array.isArray(data.data)) {
+        setCatalogCourses(data.data)
+      }
+    } catch (err) {
+      console.warn('Could not prefetch course catalog:', err)
+    }
+  }
+
   useEffect(() => {
     loadClasses()
+    loadCatalogCourses()
   }, [])
+
+  function openCreateModal() {
+    setError('')
+    setCourseName('')
+    setCourseCode('')
+    setClassName('Section A')
+    setRoom('')
+    setSemester('Spring 2026')
+    setCourseMode(catalogCourses.length > 0 ? 'existing' : 'new')
+    if (catalogCourses.length > 0) {
+      setSelectedCourseId(catalogCourses[0].id)
+    }
+    setIsModalOpen(true)
+  }
 
   async function handleCreateClass(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setNotice('')
 
-    if (!courseName.trim() || courseName.trim().length < 2) {
-      setError('Please provide a course name (minimum 2 characters).')
-      return
+    if (courseMode === 'new') {
+      if (!courseName.trim() || courseName.trim().length < 2) {
+        setError('Please provide a course name (minimum 2 characters).')
+        return
+      }
+    } else {
+      if (!selectedCourseId) {
+        setError('Please select a course from the catalog.')
+        return
+      }
     }
 
     setSubmitting(true)
     try {
+      const payload: any = {
+        className: className.trim() || 'Section A',
+        room: room.trim() || 'Room 101',
+        semester: semester.trim() || 'Spring 2026',
+      }
+
+      if (courseMode === 'existing') {
+        payload.courseId = selectedCourseId
+        const matched = catalogCourses.find((c) => c.id === selectedCourseId)
+        if (matched) {
+          payload.courseName = matched.name
+          payload.courseCode = matched.code
+        }
+      } else {
+        payload.courseName = courseName.trim()
+        payload.courseCode = courseCode.trim()
+      }
+
       const res = await fetch('/api/teacher/classes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          courseName: courseName.trim(),
-          courseCode: courseCode.trim(),
-          className: className.trim() || 'Section A',
-          room: room.trim() || 'Room 101',
-          semester: semester.trim() || 'Spring 2026',
-        }),
+        body: JSON.stringify(payload),
       })
 
       const data = await res.json()
       if (res.ok && data.ok) {
-        setNotice(`Class "${courseName.trim()} (${className.trim() || 'Section A'})" created!`)
+        setNotice(data.message || 'Class created successfully!')
         setIsModalOpen(false)
-        setCourseName('')
-        setCourseCode('')
-        setClassName('Section A')
-        setRoom('')
         await loadClasses()
+        await loadCatalogCourses()
       } else {
         setError(data.message || 'Failed to create class.')
       }
@@ -117,10 +172,7 @@ export default function TeacherClassesPage() {
 
           <div className="flex flex-wrap items-center gap-2.5">
             <Button
-              onClick={() => {
-                setIsModalOpen(true)
-                setError('')
-              }}
+              onClick={openCreateModal}
               variant="outline"
               className="gap-1.5 border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50"
             >
@@ -173,7 +225,7 @@ export default function TeacherClassesPage() {
               Create your first course section to start broadcasting 15-second dynamic QR attendance for your students.
             </p>
             <Button
-              onClick={() => setIsModalOpen(true)}
+              onClick={openCreateModal}
               className="mt-5 gap-2 bg-[#6558ee] text-xs font-semibold text-white shadow-sm hover:bg-[#5549d8]"
             >
               <Plus className="size-3.5" /> Create Your First Class
@@ -229,11 +281,11 @@ export default function TeacherClassesPage() {
         {/* Modal: Create New Class */}
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-200">
+            <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl border border-slate-200">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">Create New Class</h3>
-                  <p className="text-xs text-slate-500">Set up a course section for attendance tracking</p>
+                  <h3 className="text-base font-bold text-slate-900">Create or Assign Class</h3>
+                  <p className="text-xs text-slate-500">Add a course section to your teaching schedule</p>
                 </div>
                 <button
                   onClick={() => setIsModalOpen(false)}
@@ -249,38 +301,103 @@ export default function TeacherClassesPage() {
                 </div>
               )}
 
+              {/* Mode Toggle: Existing Course vs New Course */}
+              {catalogCourses.length > 0 && (
+                <div className="mt-4 flex rounded-lg bg-slate-100 p-1 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setCourseMode('existing')}
+                    className={`flex-1 rounded-md py-1.5 font-medium transition-all ${
+                      courseMode === 'existing'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Select Existing Course ({catalogCourses.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCourseMode('new')}
+                    className={`flex-1 rounded-md py-1.5 font-medium transition-all ${
+                      courseMode === 'new'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    + Create New Course
+                  </button>
+                </div>
+              )}
+
               <form onSubmit={handleCreateClass} className="mt-4 space-y-3.5">
+                {courseMode === 'existing' ? (
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700">Course from Catalog *</label>
+                    <select
+                      value={selectedCourseId}
+                      onChange={(e) => setSelectedCourseId(e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-800 shadow-xs focus:border-[#6558ee] focus:outline-hidden focus:ring-1 focus:ring-[#6558ee]"
+                      required
+                    >
+                      {catalogCourses.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.code} — {c.name} {c.department?.name ? `(${c.department.name})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700">Course Name *</label>
+                      <Input
+                        value={courseName}
+                        onChange={(e) => setCourseName(e.target.value)}
+                        placeholder="e.g. Distributed Systems & Cloud Computing"
+                        className="mt-1"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700">Course Code (Optional)</label>
+                      <Input
+                        value={courseCode}
+                        onChange={(e) => setCourseCode(e.target.value)}
+                        placeholder="e.g. CS-401 (leave blank to auto-generate)"
+                        className="mt-1 font-mono uppercase"
+                      />
+                    </div>
+                  </>
+                )}
+
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700">Course Name *</label>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-semibold text-slate-700">Section / Class Name *</label>
+                    <div className="flex gap-1">
+                      {['Section A', 'Section B', 'Section C'].map((sec) => (
+                        <button
+                          key={sec}
+                          type="button"
+                          onClick={() => setClassName(sec)}
+                          className={`rounded px-1.5 py-0.5 text-[10px] font-semibold border ${
+                            className === sec
+                              ? 'border-[#6558ee] bg-[#6558ee]/10 text-[#6558ee]'
+                              : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          {sec}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <Input
-                    value={courseName}
-                    onChange={(e) => setCourseName(e.target.value)}
-                    placeholder="e.g. Data Structures & Algorithms"
+                    value={className}
+                    onChange={(e) => setClassName(e.target.value)}
+                    placeholder="e.g. Section A"
                     className="mt-1"
                     required
                   />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700">Course Code (Optional)</label>
-                    <Input
-                      value={courseCode}
-                      onChange={(e) => setCourseCode(e.target.value)}
-                      placeholder="e.g. CS-201"
-                      className="mt-1 font-mono uppercase"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700">Section / Class Name</label>
-                    <Input
-                      value={className}
-                      onChange={(e) => setClassName(e.target.value)}
-                      placeholder="e.g. Section A"
-                      className="mt-1"
-                      required
-                    />
-                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -304,8 +421,11 @@ export default function TeacherClassesPage() {
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-slate-50 p-3 text-[11px] text-slate-500 border border-slate-100">
-                  <span className="font-semibold text-slate-700">Zero Administrative Overhead:</span> Students will be automatically enrolled into this course when they scan the daily attendance QR code.
+                <div className="rounded-xl bg-slate-50 p-3 text-[11px] text-slate-500 border border-slate-100 flex items-start gap-2">
+                  <GraduationCap className="size-4 text-[#6558ee] shrink-0 mt-0.5" />
+                  <span>
+                    <strong className="text-slate-700">Autonomous Enrollment:</strong> Students are automatically enrolled into this course when they scan your session QR code. Zero manual roster management required.
+                  </span>
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2">
@@ -324,10 +444,10 @@ export default function TeacherClassesPage() {
                   >
                     {submitting ? (
                       <>
-                        <Loader2 className="mr-1.5 size-3.5 animate-spin" /> Creating…
+                        <Loader2 className="mr-1.5 size-3.5 animate-spin" /> Saving…
                       </>
                     ) : (
-                      'Create Class'
+                      'Save Class'
                     )}
                   </Button>
                 </div>
@@ -339,4 +459,3 @@ export default function TeacherClassesPage() {
     </DashboardLayout>
   )
 }
-

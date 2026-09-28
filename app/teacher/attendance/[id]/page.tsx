@@ -18,7 +18,6 @@ import {
   Power,
   RefreshCw,
   ShieldCheck,
-  Sparkles,
   Users,
 } from 'lucide-react'
 import { DashboardLayout } from '@/components/dashboard-layout'
