@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logAuditEvent } from '@/lib/audit'
 
+import { getValidationErrorMessage } from '@/lib/format-error'
+
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -16,7 +18,7 @@ export async function POST(request: Request) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { ok: false, message: validation.error.errors[0]?.message || 'Invalid input' },
+        { ok: false, message: getValidationErrorMessage(validation.error) },
         { status: 400 }
       )
     }

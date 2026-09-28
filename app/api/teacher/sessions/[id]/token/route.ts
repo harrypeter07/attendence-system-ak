@@ -40,6 +40,10 @@ export async function GET(
 
     // Generate new 15-second token
     const tokenData = await createSessionToken(sessionId)
+    const remainingSeconds = Math.max(
+      0,
+      Math.round((new Date(tokenData.validUntil).getTime() - Date.now()) / 1000)
+    )
 
     return NextResponse.json({
       ok: true,
@@ -49,6 +53,7 @@ export async function GET(
         validFrom: tokenData.validFrom,
         validUntil: tokenData.validUntil,
         intervalSeconds: tokenData.intervalSeconds,
+        remainingSeconds,
       },
     })
   } catch (err) {

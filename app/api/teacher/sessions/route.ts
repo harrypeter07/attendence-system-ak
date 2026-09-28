@@ -88,6 +88,8 @@ export async function GET() {
   }
 }
 
+import { getValidationErrorMessage } from '@/lib/format-error'
+
 export async function POST(request: Request) {
   try {
     const auth = await requireAuth(['teacher', 'admin'])
@@ -99,7 +101,7 @@ export async function POST(request: Request) {
     const validation = startSessionSchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
-        { ok: false, message: validation.error.errors[0]?.message || 'Invalid input' },
+        { ok: false, message: getValidationErrorMessage(validation.error) },
         { status: 400 }
       )
     }
@@ -177,6 +179,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       data: {
+        id: sessionId,
         sessionId,
         token: tokenData.token,
         validFrom: tokenData.validFrom,

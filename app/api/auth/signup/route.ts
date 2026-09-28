@@ -12,6 +12,8 @@ const signupSchema = z.object({
   identifier: z.string().optional().nullable(), // Student ID or Employee ID
 })
 
+import { getValidationErrorMessage } from '@/lib/format-error'
+
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => null)
@@ -19,7 +21,7 @@ export async function POST(request: Request) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { ok: false, message: validation.error.errors[0]?.message || 'Invalid input' },
+        { ok: false, message: getValidationErrorMessage(validation.error) },
         { status: 400 }
       )
     }

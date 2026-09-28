@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { validateSessionToken } from '@/lib/qr/token'
 import { calculateDistance } from '@/lib/geo'
 import { logAuditEvent } from '@/lib/audit'
+import { getValidationErrorMessage } from '@/lib/format-error'
 
 const verifyAttendanceSchema = z.object({
   sessionId: z.string().uuid('Invalid session ID'),
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
     const validation = verifyAttendanceSchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
-        { ok: false, message: validation.error.errors[0]?.message || 'Invalid request payload' },
+        { ok: false, message: getValidationErrorMessage(validation.error, 'Invalid request payload') },
         { status: 400 }
       )
     }
