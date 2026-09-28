@@ -52,7 +52,7 @@ export async function middleware(request: NextRequest) {
 
   // If user is not authenticated and trying to access protected paths
   if (!user) {
-    if (pathname.startsWith('/admin') || pathname.startsWith('/teacher') || pathname.startsWith('/student') || pathname === '/') {
+    if (pathname.startsWith('/admin') || pathname.startsWith('/teacher') || pathname.startsWith('/student')) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       return NextResponse.redirect(url)

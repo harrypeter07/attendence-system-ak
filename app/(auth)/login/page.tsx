@@ -171,17 +171,17 @@ export default function LoginPage() {
         </div>
 
         {/* Top Logo */}
-        <div className="relative z-10 flex items-center gap-3">
+        <Link href="/" className="relative z-10 flex items-center gap-3 hover:opacity-90 transition-opacity">
           <div className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#6558ee] to-violet-400 shadow-lg shadow-[#6558ee]/40">
             <Zap className="size-6 fill-current text-white" />
           </div>
           <div>
             <p className="text-xl font-extrabold tracking-tight">Attendly</p>
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-              Next-Gen Smart Attendance
+              Smart Attendance Architecture
             </p>
           </div>
-        </div>
+        </Link>
 
         {/* Middle Value Proposition with Floating Visual Card */}
         <div className="relative z-10 max-w-lg space-y-6">
