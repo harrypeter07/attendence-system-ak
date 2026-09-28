@@ -88,12 +88,19 @@ export default function StudentCoursesPage() {
             <Loader2 className="size-8 animate-spin text-[#6558ee]" />
           </div>
         ) : courses.length === 0 ? (
-          <Card className="p-12 text-center">
+          <Card className="p-12 text-center bg-white border-slate-200">
             <BookOpen className="mx-auto size-12 text-slate-300" />
-            <h3 className="mt-4 text-base font-semibold text-slate-900">No enrolled courses</h3>
-            <p className="mt-1 text-sm text-slate-500">
-              You are not currently enrolled in any classes. Please contact the registrar.
+            <h3 className="mt-4 text-base font-semibold text-slate-900">No enrolled courses yet</h3>
+            <p className="mt-1 text-sm text-slate-500 max-w-md mx-auto">
+              You haven&apos;t joined any classes yet. Simply scan your instructor&apos;s classroom QR code to automatically join the class roster and mark your attendance.
             </p>
+            <div className="mt-4">
+              <Link href="/student/scan">
+                <Button className="bg-[#6558ee] text-xs font-semibold text-white hover:bg-[#5549d8]">
+                  <QrCode className="size-3.5 mr-1.5" /> Scan Attendance QR
+                </Button>
+              </Link>
+            </div>
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

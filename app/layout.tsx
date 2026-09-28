@@ -4,24 +4,15 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Attendly · Smart Attendance',
-  description: 'A modern attendance management workspace for institutions.',
-  generator: 'v0.app',
+  description: 'Enterprise dynamic QR attendance with real-time verification and GPS geofencing.',
   icons: {
     icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
       {
         url: '/icon.svg',
         type: 'image/svg+xml',
       },
     ],
-    apple: '/apple-icon.png',
+    apple: '/icon.svg',
   },
 }
 

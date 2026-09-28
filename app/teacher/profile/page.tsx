@@ -29,7 +29,7 @@ export default function TeacherProfilePage() {
   useEffect(() => {
     async function loadProfile() {
       try {
-        const res = await fetch('/api/student/profile')
+        const res = await fetch('/api/teacher/profile')
         const json = await res.json()
         if (json.ok && json.data) {
           setProfile(json.data)
@@ -49,7 +49,7 @@ export default function TeacherProfilePage() {
     setSaving(true)
     setNotice('')
     try {
-      const res = await fetch('/api/student/profile', {
+      const res = await fetch('/api/teacher/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone }),
