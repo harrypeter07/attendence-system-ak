@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { UserButton, UserButtonUser } from '@/components/user-button'
 
 interface NavItem {
   label: string
@@ -61,6 +62,38 @@ const studentNav: NavItem[] = [
   { label: 'Student Profile', href: '/student/profile', icon: User },
 ]
 
+// Bottom navigation items for mobile
+interface BottomNavItem {
+  label: string
+  href: string
+  icon: any
+  isPrimaryAction?: boolean
+}
+
+const studentBottomNav: BottomNavItem[] = [
+  { label: 'Home', href: '/student', icon: LayoutDashboard },
+  { label: 'Courses', href: '/student/courses', icon: BookOpen },
+  { label: 'Scan QR', href: '/student/scan', icon: QrCode, isPrimaryAction: true },
+  { label: 'History', href: '/student/attendance', icon: CalendarCheck },
+  { label: 'Profile', href: '/student/profile', icon: User },
+]
+
+const teacherBottomNav: BottomNavItem[] = [
+  { label: 'Home', href: '/teacher', icon: LayoutDashboard },
+  { label: 'Classes', href: '/teacher/classes', icon: BookOpen },
+  { label: 'Start QR', href: '/teacher/attendance/new', icon: QrCode, isPrimaryAction: true },
+  { label: 'Sessions', href: '/teacher/sessions', icon: CalendarCheck },
+  { label: 'Reports', href: '/teacher/reports', icon: Activity },
+]
+
+const adminBottomNav: BottomNavItem[] = [
+  { label: 'Overview', href: '/admin', icon: LayoutDashboard },
+  { label: 'Students', href: '/admin/students', icon: GraduationCap },
+  { label: 'Teachers', href: '/admin/teachers', icon: Users },
+  { label: 'Courses', href: '/admin/courses', icon: BookOpen },
+  { label: 'Reports', href: '/admin/reports', icon: Activity },
+]
+
 export function DashboardLayout({
   children,
   role = 'admin',
@@ -71,33 +104,34 @@ export function DashboardLayout({
   const pathname = usePathname()
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [user, setUser] = useState<{
-    email: string
-    fullName: string
-    role: string
-    studentId?: string
-    employeeId?: string
-  } | null>(null)
+  const [user, setUser] = useState<UserButtonUser | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    async function loadSession() {
-      try {
-        const res = await fetch('/api/auth/session')
-        const data = await res.json()
-        if (data.authenticated && data.user) {
-          setUser(data.user)
-        }
-      } catch (err) {
-        console.error(err)
-      } finally {
-        setLoading(false)
+  async function loadSession() {
+    try {
+      const res = await fetch('/api/auth/session')
+      const data = await res.json()
+      if (data.authenticated && data.user) {
+        setUser(data.user)
       }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     loadSession()
   }, [])
 
+  function handleAvatarUpdate(newAvatarUrl: string) {
+    setUser((prev) => (prev ? { ...prev, avatarUrl: newAvatarUrl } : null))
+  }
+
   const navItems = role === 'admin' ? adminNav : role === 'teacher' ? teacherNav : studentNav
+  const bottomNavItems =
+    role === 'admin' ? adminBottomNav : role === 'teacher' ? teacherBottomNav : studentBottomNav
 
   async function handleLogout() {
     try {
@@ -147,17 +181,32 @@ export function DashboardLayout({
           </Button>
         </div>
 
-        {/* User Badge Info */}
+        {/* User Badge Info with Avatar */}
         <div className="border-b border-white/10 px-6 py-4">
-          <div className="flex items-center justify-between gap-2">
-            <p className="truncate text-xs font-semibold text-white">
-              {user?.fullName || roleLabel}
-            </p>
-            <span className={`rounded px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider border ${roleBadgeStyle}`}>
-              {role}
-            </span>
+          <div className="flex items-center gap-3">
+            <div className="relative size-10 shrink-0 overflow-hidden rounded-full ring-2 ring-white/20">
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user.fullName || 'User'}
+                  className="size-full object-cover"
+                />
+              ) : (
+                <div className="flex size-full items-center justify-center bg-[#6558ee] font-bold text-white text-xs">
+                  {(user?.fullName || role)[0].toUpperCase()}
+                </div>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-semibold text-white">
+                {user?.fullName || roleLabel}
+              </p>
+              <p className="truncate text-[11px] text-slate-400">{user?.email || `${role}@attendly.edu`}</p>
+              <span className={`inline-block mt-1 rounded px-2 py-0.5 text-[9px] font-medium uppercase tracking-wider border ${roleBadgeStyle}`}>
+                {role}
+              </span>
+            </div>
           </div>
-          <p className="mt-0.5 truncate text-[11px] text-slate-400">{user?.email || `${role}@attendly.edu`}</p>
         </div>
 
         {/* Nav Links */}
@@ -213,10 +262,10 @@ export function DashboardLayout({
         </div>
       </aside>
 
-      {/* Backdrop for mobile */}
+      {/* Backdrop for mobile sidebar */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs lg:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -224,25 +273,25 @@ export function DashboardLayout({
       {/* Main Content Area */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Top Navbar */}
-        <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200 bg-white/90 px-4 backdrop-blur-md sm:px-8">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-30 flex h-16 sm:h-20 items-center justify-between border-b border-slate-200 bg-white/95 px-3 sm:px-8 backdrop-blur-md">
+          <div className="flex items-center gap-2.5 sm:gap-3">
             <Button
               variant="outline"
               size="icon"
-              className="border-slate-200 text-slate-600 lg:hidden"
+              className="border-slate-200 text-slate-600 lg:hidden size-9"
               onClick={() => setMobileOpen(true)}
               aria-label="Open sidebar"
             >
-              <Menu className="size-5" />
+              <Menu className="size-4.5" />
             </Button>
             <div>
-              <p className="text-xs font-medium text-slate-500">{roleLabel} Workspace</p>
-              <h1 className="text-base font-bold text-slate-900 sm:text-lg">Attendly Smart Portal</h1>
+              <p className="text-[11px] font-medium text-slate-500 sm:text-xs">{roleLabel} Workspace</p>
+              <h1 className="text-sm font-bold text-slate-900 sm:text-lg tracking-tight">Attendly Smart Portal</h1>
             </div>
           </div>
 
           {/* Right Header Controls */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-3">
             {role === 'teacher' && (
               <Link href="/teacher/attendance/new">
                 <Button className="hidden h-9 gap-1.5 rounded-xl bg-[#6558ee] text-xs font-semibold text-white shadow-sm hover:bg-[#5549d8] sm:inline-flex">
@@ -252,31 +301,70 @@ export function DashboardLayout({
             )}
             {role === 'student' && (
               <Link href="/student/scan">
-                <Button className="h-9 gap-1.5 rounded-xl bg-[#6558ee] text-xs font-semibold text-white shadow-sm hover:bg-[#5549d8]">
+                <Button className="hidden h-9 gap-1.5 rounded-xl bg-[#6558ee] text-xs font-semibold text-white shadow-sm hover:bg-[#5549d8] sm:inline-flex">
                   <QrCode className="size-3.5" /> Scan QR Now
                 </Button>
               </Link>
             )}
 
-            <div className="flex items-center gap-2 border-l border-slate-200 pl-3">
-              <div className="flex size-9 items-center justify-center rounded-full bg-[#6558ee]/10 font-bold text-[#6558ee]">
-                {(user?.fullName || role)[0].toUpperCase()}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleLogout}
-                className="hidden text-xs text-slate-500 hover:text-rose-600 sm:inline-flex"
-              >
-                Sign Out
-              </Button>
+            {/* Dedicated UserButton with Avatar & Photo Upload */}
+            <div className="flex items-center pl-1 sm:border-l sm:border-slate-200 sm:pl-3">
+              <UserButton user={user} onAvatarUpdate={handleAvatarUpdate} />
             </div>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-8 lg:p-10">{children}</main>
+        {/* Page Content (with bottom padding for mobile bottom bar) */}
+        <main className="flex-1 p-3 sm:p-8 lg:p-10 pb-24 sm:pb-8 lg:pb-10">{children}</main>
       </div>
+
+      {/* Mobile Docked Bottom Navigation Bar */}
+      <nav
+        aria-label="Mobile Navigation"
+        className="fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t border-slate-200/90 bg-white/95 px-2 backdrop-blur-md lg:hidden shadow-[0_-4px_16px_rgba(0,0,0,0.06)]"
+      >
+        {bottomNavItems.map((item) => {
+          const Icon = item.icon
+          const isActive = pathname === item.href
+
+          if (item.isPrimaryAction) {
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="group relative -top-3 flex flex-col items-center"
+              >
+                <div className="flex size-12 items-center justify-center rounded-2xl bg-[#6558ee] text-white shadow-lg shadow-[#6558ee]/40 ring-4 ring-white transition-transform active:scale-95 group-hover:bg-[#5549d8]">
+                  <Icon className="size-6" />
+                </div>
+                <span className="mt-0.5 text-[10px] font-bold text-[#6558ee]">
+                  {item.label}
+                </span>
+              </Link>
+            )
+          }
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex flex-1 flex-col items-center justify-center py-1 transition-colors ${
+                isActive ? 'text-[#6558ee]' : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <div className="relative">
+                <Icon className={`size-5 transition-transform ${isActive ? 'scale-110' : ''}`} />
+                {isActive && (
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-[#6558ee]" />
+                )}
+              </div>
+              <span className={`text-[10px] tracking-tight mt-1 ${isActive ? 'font-bold' : 'font-medium'}`}>
+                {item.label}
+              </span>
+            </Link>
+          )
+        })}
+      </nav>
     </div>
   )
 }

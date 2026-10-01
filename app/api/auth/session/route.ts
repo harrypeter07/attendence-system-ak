@@ -16,6 +16,7 @@ export async function GET() {
         email: user.email,
         role: profile.role,
         fullName: profile.full_name,
+        avatarUrl: profile.avatar_url,
         departmentId: profile.department_id,
         studentId: profile.student_id,
         employeeId: profile.employee_id,

@@ -45,7 +45,8 @@ export async function GET(
             id,
             full_name,
             email,
-            student_id
+            student_id,
+            avatar_url
           )
         )
       `)
@@ -73,6 +74,7 @@ export async function GET(
       studentName: r.student?.full_name || 'Unknown',
       studentEmail: r.student?.email || '',
       studentId: r.student?.student_id || 'N/A',
+      studentAvatar: r.student?.avatar_url || null,
       markedAt: r.marked_at,
       distanceMeters: r.distance_meters,
       status: r.status,

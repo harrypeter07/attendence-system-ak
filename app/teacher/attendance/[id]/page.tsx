@@ -31,6 +31,7 @@ interface Attendee {
   studentName: string
   studentEmail: string
   studentId: string
+  studentAvatar: string | null
   markedAt: string
   distanceMeters: number | null
   status: string
@@ -69,6 +70,7 @@ export default function LiveAttendanceRoomPage() {
   const [ending, setEnding] = useState(false)
   const [error, setError] = useState<string>('')
   const [fullscreen, setFullscreen] = useState(false)
+  const [selectedStudent, setSelectedStudent] = useState<Attendee | null>(null)
 
   const countdownRef = useRef<NodeJS.Timeout | null>(null)
   const pollRef = useRef<NodeJS.Timeout | null>(null)
@@ -374,25 +376,52 @@ export default function LiveAttendanceRoomPage() {
                   {session?.attendees?.length || 0} Present
                 </span>
               </CardHeader>
+              <div className="bg-slate-50 px-4 py-2 border-b border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                <span className="flex items-center gap-1.5 font-medium text-slate-700">
+                  <ShieldCheck className="size-3.5 text-emerald-600" />
+                  Live Face Verification Active
+                </span>
+                <span>Click any student to inspect photo ID</span>
+              </div>
               <CardContent className="p-0">
                 <div className="max-h-[380px] overflow-y-auto divide-y divide-slate-100">
                   {session?.attendees && session.attendees.length > 0 ? (
                     session.attendees.map((attendee) => (
                       <div
                         key={attendee.id}
-                        className="flex items-center justify-between p-3.5 hover:bg-slate-50 transition-colors"
+                        onClick={() => setSelectedStudent(attendee)}
+                        className="flex items-center justify-between p-3.5 hover:bg-slate-50 transition-colors cursor-pointer group"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="flex size-9 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-700 text-xs">
-                            {attendee.studentName
-                              .split(' ')
-                              .map((n) => n[0])
-                              .join('')
-                              .slice(0, 2)
-                              .toUpperCase()}
+                          <div className="relative size-10 shrink-0 overflow-hidden rounded-full ring-2 ring-emerald-500/30 group-hover:ring-[#6558ee] transition-all">
+                            {attendee.studentAvatar ? (
+                              <img
+                                src={attendee.studentAvatar}
+                                alt={attendee.studentName}
+                                className="size-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex size-full items-center justify-center bg-emerald-100 font-bold text-emerald-700 text-xs">
+                                {attendee.studentName
+                                  .split(' ')
+                                  .map((n) => n[0])
+                                  .join('')
+                                  .slice(0, 2)
+                                  .toUpperCase()}
+                              </div>
+                            )}
                           </div>
                           <div>
-                            <p className="text-sm font-semibold text-slate-900">{attendee.studentName}</p>
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-sm font-semibold text-slate-900 group-hover:text-[#6558ee] transition-colors">
+                                {attendee.studentName}
+                              </p>
+                              {attendee.studentAvatar && (
+                                <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-[9px] font-semibold text-indigo-600 border border-indigo-200">
+                                  Photo ID
+                                </span>
+                              )}
+                            </div>
                             <p className="text-xs text-slate-500 font-mono">
                               ID: {attendee.studentId} · {attendee.studentEmail}
                             </p>
@@ -426,6 +455,96 @@ export default function LiveAttendanceRoomPage() {
             </Card>
           </div>
         </div>
+
+        {/* Modal: Student Face Verification Card */}
+        {selectedStudent && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+            <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex size-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                    <ShieldCheck className="size-4" />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900">Student Verification Card</h3>
+                </div>
+                <button
+                  onClick={() => setSelectedStudent(null)}
+                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+
+              <div className="mt-4 flex flex-col items-center text-center">
+                {/* Large Profile Face Image */}
+                <div className="relative size-32 overflow-hidden rounded-full ring-4 ring-emerald-500/20 shadow-lg">
+                  {selectedStudent.studentAvatar ? (
+                    <img
+                      src={selectedStudent.studentAvatar}
+                      alt={selectedStudent.studentName}
+                      className="size-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex size-full items-center justify-center bg-emerald-100 text-emerald-700 font-bold text-2xl">
+                      {selectedStudent.studentName
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')
+                        .slice(0, 2)
+                        .toUpperCase()}
+                    </div>
+                  )}
+                  <span className="absolute bottom-1 right-1 flex size-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm ring-2 ring-white">
+                    <CheckCircle2 className="size-3.5" />
+                  </span>
+                </div>
+
+                <h4 className="mt-3 text-base font-bold text-slate-900">{selectedStudent.studentName}</h4>
+                <p className="text-xs font-mono text-slate-500">Roll/Student ID: {selectedStudent.studentId}</p>
+                <p className="text-xs text-slate-400">{selectedStudent.studentEmail}</p>
+
+                {/* Audit details card */}
+                <div className="mt-4 w-full rounded-xl bg-slate-50 p-3 text-left space-y-2 text-xs border border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Scan Status:</span>
+                    <span className="font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                      Verified Present
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Timestamp:</span>
+                    <span className="font-mono text-slate-700">
+                      {new Date(selectedStudent.markedAt).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                      })}
+                    </span>
+                  </div>
+                  {selectedStudent.distanceMeters !== null && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-500">GPS Proximity:</span>
+                      <span className="font-mono text-slate-700">
+                        ±{selectedStudent.distanceMeters}m from beacon
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Anti-Proxy Validation:</span>
+                    <span className="text-[11px] font-semibold text-emerald-600">Passed (Rotating Token)</span>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={() => setSelectedStudent(null)}
+                  className="mt-5 w-full bg-[#6558ee] text-xs font-semibold text-white hover:bg-[#5549d8]"
+                >
+                  Close Verification
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   )

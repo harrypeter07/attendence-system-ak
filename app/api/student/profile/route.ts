@@ -20,6 +20,7 @@ export async function GET() {
         student_id,
         employee_id,
         phone,
+        avatar_url,
         status,
         created_at,
         department:departments (id, name, code)
@@ -53,6 +54,7 @@ export async function PATCH(request: Request) {
     }
     if (body.fullName) updateData.full_name = body.fullName.trim()
     if (body.phone !== undefined) updateData.phone = body.phone.trim()
+    if (body.avatarUrl !== undefined) updateData.avatar_url = body.avatarUrl
 
     const { error } = await admin
       .from('profiles')

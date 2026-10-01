@@ -26,6 +26,8 @@ export default function StudentProfilePage() {
   const [saving, setSaving] = useState(false)
   const [phone, setPhone] = useState('')
   const [notice, setNotice] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
 
   useEffect(() => {
     async function loadProfile() {
@@ -35,6 +37,7 @@ export default function StudentProfilePage() {
         if (json.ok && json.data) {
           setProfile(json.data)
           setPhone(json.data.phone || '')
+          setAvatarUrl(json.data.avatar_url || null)
         }
       } catch (err) {
         console.error(err)
@@ -44,6 +47,59 @@ export default function StudentProfilePage() {
     }
     loadProfile()
   }, [])
+
+  function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      const img = new Image()
+      img.onload = async () => {
+        const canvas = document.createElement('canvas')
+        const MAX_DIM = 400
+        let width = img.width
+        let height = img.height
+        if (width > height) {
+          if (width > MAX_DIM) {
+            height = Math.round((height * MAX_DIM) / width)
+            width = MAX_DIM
+          }
+        } else {
+          if (height > MAX_DIM) {
+            width = Math.round((width * MAX_DIM) / height)
+            height = MAX_DIM
+          }
+        }
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height)
+          const compressed = canvas.toDataURL('image/jpeg', 0.85)
+          setAvatarUrl(compressed)
+          setUploadingPhoto(true)
+          try {
+            const res = await fetch('/api/profile', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ avatarUrl: compressed }),
+            })
+            const data = await res.json()
+            if (res.ok && data.ok) {
+              setNotice('Profile photo updated successfully!')
+            }
+          } catch {
+            setNotice('Failed to upload photo.')
+          } finally {
+            setUploadingPhoto(false)
+          }
+        }
+      }
+      img.src = reader.result as string
+    }
+    reader.readAsDataURL(file)
+  }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
@@ -97,14 +153,33 @@ export default function StudentProfilePage() {
         ) : (
           <Card className="border-slate-200 shadow-xs bg-white">
             <CardHeader className="p-6 border-b border-slate-100 flex flex-row items-center gap-4">
-              <div className="flex size-14 items-center justify-center rounded-2xl bg-[#6558ee]/10 text-xl font-bold text-[#6558ee]">
-                {profile?.full_name ? profile.full_name[0].toUpperCase() : 'S'}
-              </div>
+              <label className="relative size-16 shrink-0 cursor-pointer group">
+                <div className="relative size-full overflow-hidden rounded-2xl ring-2 ring-emerald-500/20 group-hover:ring-[#6558ee] transition-all">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Student Avatar" className="size-full object-cover" />
+                  ) : (
+                    <div className="flex size-full items-center justify-center bg-[#6558ee]/10 text-xl font-bold text-[#6558ee]">
+                      {profile?.full_name ? profile.full_name[0].toUpperCase() : 'S'}
+                    </div>
+                  )}
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-[10px] font-bold">Edit</span>
+                  </div>
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  disabled={uploadingPhoto}
+                  className="hidden"
+                />
+              </label>
               <div>
                 <CardTitle className="text-lg">{profile?.full_name}</CardTitle>
                 <CardDescription className="text-xs">
                   Student ID: <span className="font-mono font-semibold text-slate-700">{profile?.student_id || 'N/A'}</span>
                 </CardDescription>
+                <p className="text-[11px] text-slate-400 mt-1">Tap avatar to change classroom verification photo</p>
               </div>
             </CardHeader>
 
