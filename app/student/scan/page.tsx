@@ -4,15 +4,18 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
   AlertCircle,
+  AlertTriangle,
   ArrowLeft,
   BookOpen,
   Camera,
   CheckCircle2,
+  Clock,
   Compass,
   FileCheck2,
   GraduationCap,
   Loader2,
   MapPin,
+  Navigation,
   QrCode,
   RefreshCw,
   ShieldAlert,
@@ -448,32 +451,120 @@ export default function StudentScanPage() {
 
         {/* Scan Results: ERROR */}
         {scanState === 'error' && (
-          <Card className="border-rose-300 bg-rose-50/60 shadow-lg text-rose-950 overflow-hidden">
-            <div className="bg-rose-600 p-4 text-white flex items-center gap-3">
-              <ShieldAlert className="size-7 shrink-0" />
-              <div>
-                <h3 className="font-bold text-base">Verification Rejected</h3>
-                <p className="text-xs text-rose-100">Unable to mark attendance for this session.</p>
-              </div>
-            </div>
-            <CardContent className="p-6 space-y-4">
-              <div className="rounded-xl bg-white p-4 border border-rose-200 text-sm text-rose-800 leading-relaxed">
-                {resultMessage || cameraError || 'Attendance could not be confirmed.'}
-              </div>
-
-              {resultData?.distance && resultData?.allowedRadius && (
-                <div className="rounded-lg bg-rose-100/70 p-3 text-xs text-rose-900 border border-rose-200">
-                  <strong>Geofence Violation:</strong> You are approximately <strong>{resultData.distance} meters</strong> away from the classroom. The maximum allowed radius is <strong>{resultData.allowedRadius} meters</strong>.
+          <Card className="border-rose-300 bg-rose-50/60 shadow-lg text-rose-950 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            {resultData?.errorType === 'expired_qr' || resultMessage?.toLowerCase().includes('expired') ? (
+              <>
+                <div className="bg-amber-600 p-4 text-white flex items-center gap-3">
+                  <div className="flex size-10 items-center justify-center rounded-xl bg-white/20">
+                    <Clock className="size-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-base">QR Code Has Expired</h3>
+                    <p className="text-xs text-amber-100">Dynamic 15-second rotation window elapsed</p>
+                  </div>
                 </div>
-              )}
+                <CardContent className="p-6 space-y-4">
+                  <div className="rounded-xl bg-white p-4 border border-amber-200 text-sm text-amber-900 leading-relaxed space-y-2 shadow-xs">
+                    <p className="font-semibold text-slate-900">
+                      The dynamic QR code on the instructor&apos;s screen has already refreshed.
+                    </p>
+                    <p className="text-xs text-slate-600">
+                      Attendly uses high-security 15-second rotating cryptographic tokens to prevent proxy attendance and screenshot sharing.
+                    </p>
+                  </div>
 
-              <Button
-                onClick={resetToScanAgain}
-                className="w-full bg-rose-600 font-semibold text-white hover:bg-rose-700"
-              >
-                <RefreshCw className="size-4 mr-2" /> Try Scanning Again
-              </Button>
-            </CardContent>
+                  <div className="rounded-xl bg-amber-50 p-3.5 border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5">
+                    <RefreshCw className="size-4 text-amber-600 shrink-0 mt-0.5" />
+                    <span>
+                      <strong>What to do:</strong> Look up at the classroom projector screen and scan the fresh QR code currently shown.
+                    </span>
+                  </div>
+
+                  <Button
+                    onClick={resetToScanAgain}
+                    className="w-full bg-[#6558ee] font-semibold text-white hover:bg-[#5549d8]"
+                  >
+                    <Camera className="size-4 mr-2" /> Scan Current Screen QR
+                  </Button>
+                </CardContent>
+              </>
+            ) : resultData?.errorType === 'geofence_violation' || resultData?.distance ? (
+              <>
+                <div className="bg-rose-600 p-4 text-white flex items-center gap-3">
+                  <div className="flex size-10 items-center justify-center rounded-xl bg-white/20">
+                    <Navigation className="size-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-base">Location Verification Failed</h3>
+                    <p className="text-xs text-rose-100">Outside permitted classroom geofence</p>
+                  </div>
+                </div>
+                <CardContent className="p-6 space-y-4">
+                  <div className="rounded-xl bg-white p-4 border border-rose-200 space-y-2.5 shadow-xs">
+                    <div className="flex items-center justify-between text-xs border-b border-slate-100 pb-2">
+                      <span className="text-slate-500 font-medium">Your Measured Distance:</span>
+                      <span className="font-mono font-bold text-rose-600 text-sm">
+                        {resultData?.distance} meters away
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs border-b border-slate-100 py-1.5">
+                      <span className="text-slate-500 font-medium">Classroom Allowed Radius:</span>
+                      <span className="font-mono font-bold text-slate-800">
+                        ±{resultData?.allowedRadius || 100} meters
+                      </span>
+                    </div>
+                    <p className="text-xs text-rose-700 pt-1 leading-relaxed">
+                      {resultMessage || `You must be inside the classroom to verify attendance. You are currently ${resultData.distance}m away.`}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl bg-rose-50 p-3 text-xs text-rose-800 border border-rose-200 flex items-start gap-2">
+                    <MapPin className="size-4 text-rose-600 shrink-0 mt-0.5" />
+                    <span>
+                      Please enter the lecture hall or ensure your phone&apos;s GPS has high-accuracy location enabled.
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Button
+                      onClick={obtainLocation}
+                      variant="outline"
+                      className="flex-1 border-rose-300 text-rose-800 hover:bg-rose-100"
+                    >
+                      <Compass className="size-4 mr-2" /> Recalibrate GPS
+                    </Button>
+                    <Button
+                      onClick={resetToScanAgain}
+                      className="flex-1 bg-rose-600 font-semibold text-white hover:bg-rose-700"
+                    >
+                      <RefreshCw className="size-4 mr-2" /> Try Again
+                    </Button>
+                  </div>
+                </CardContent>
+              </>
+            ) : (
+              <>
+                <div className="bg-rose-600 p-4 text-white flex items-center gap-3">
+                  <ShieldAlert className="size-7 shrink-0" />
+                  <div>
+                    <h3 className="font-bold text-base">Verification Rejected</h3>
+                    <p className="text-xs text-rose-100">Unable to mark attendance for this session.</p>
+                  </div>
+                </div>
+                <CardContent className="p-6 space-y-4">
+                  <div className="rounded-xl bg-white p-4 border border-rose-200 text-sm text-rose-800 leading-relaxed shadow-xs">
+                    {resultMessage || cameraError || 'Attendance could not be confirmed.'}
+                  </div>
+
+                  <Button
+                    onClick={resetToScanAgain}
+                    className="w-full bg-rose-600 font-semibold text-white hover:bg-rose-700"
+                  >
+                    <RefreshCw className="size-4 mr-2" /> Try Scanning Again
+                  </Button>
+                </CardContent>
+              </>
+            )}
           </Card>
         )}
 

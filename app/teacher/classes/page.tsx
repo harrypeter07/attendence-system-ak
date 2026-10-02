@@ -293,10 +293,14 @@ export default function TeacherClassesPage() {
                       {cls.enrolledCount} Enrolled
                     </Badge>
                   </div>
-                  <CardTitle className="mt-2 text-base font-bold text-slate-900">{cls.course?.name}</CardTitle>
-                  <CardDescription className="text-xs">
-                    {cls.name} · {cls.course?.department?.name || 'Academic Course'}
-                  </CardDescription>
+                  <Link href={`/teacher/classes/${cls.id}`} className="group block">
+                    <CardTitle className="mt-2 text-base font-bold text-slate-900 group-hover:text-[#6558ee] transition-colors flex items-center justify-between">
+                      <span>{cls.course?.name}</span>
+                    </CardTitle>
+                    <CardDescription className="text-xs group-hover:text-slate-600">
+                      {cls.name} · {cls.course?.department?.name || 'Academic Course'}
+                    </CardDescription>
+                  </Link>
                 </CardHeader>
 
                 <CardContent className="p-5 pt-0 space-y-4">
@@ -330,6 +334,13 @@ export default function TeacherClassesPage() {
                       </Button>
                     </Link>
                   </div>
+
+                  <Link
+                    href={`/teacher/classes/${cls.id}`}
+                    className="block text-center text-xs font-semibold text-[#6558ee] hover:underline pt-1"
+                  >
+                    View Student Roster & Attendance Details →
+                  </Link>
                 </CardContent>
               </Card>
             ))}

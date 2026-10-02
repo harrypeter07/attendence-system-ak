@@ -126,7 +126,11 @@ export async function POST(request: Request) {
       })
 
       return NextResponse.json(
-        { ok: false, message: tokenResult.reason || 'QR code expired or invalid. Please scan again.' },
+        {
+          ok: false,
+          errorType: 'expired_qr',
+          message: tokenResult.reason || 'QR code expired or invalid. Please wait for the next 15-second rotation and scan again.',
+        },
         { status: 400 }
       )
     }
@@ -169,7 +173,8 @@ export async function POST(request: Request) {
         return NextResponse.json(
           {
             ok: false,
-            message: `Location verification failed: You are approximately ${Math.round(distanceMeters)} meters away from the classroom. Attendance can only be recorded within ${radiusMeters} meters.`,
+            errorType: 'geofence_violation',
+            message: `You are too far from the classroom (${Math.round(distanceMeters)}m away). Attendance is only allowed within ${radiusMeters} meters of the classroom.`,
             distance: Math.round(distanceMeters),
             allowedRadius: radiusMeters,
           },
