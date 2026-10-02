@@ -10,8 +10,10 @@ import {
   Calendar,
   CheckCircle2,
   GraduationCap,
+  KeyRound,
   Loader2,
   MapPin,
+  Plus,
   QrCode,
   User,
   X,
@@ -21,6 +23,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 
 interface EnrolledCourse {
   enrollmentId: string
@@ -46,6 +49,12 @@ function StudentCoursesContent() {
   const [courses, setCourses] = useState<EnrolledCourse[]>([])
   const [loading, setLoading] = useState(true)
   const [enrollMessage, setEnrollMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  // Enroll Modal state
+  const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false)
+  const [classCodeInput, setClassCodeInput] = useState('')
+  const [joining, setJoining] = useState(false)
+  const [modalError, setModalError] = useState('')
 
   async function loadCourses() {
     try {
@@ -86,6 +95,38 @@ function StudentCoursesContent() {
     handleAutoJoin()
   }, [joinClassId])
 
+  async function handleJoinByCode(e: React.FormEvent) {
+    e.preventDefault()
+    const code = classCodeInput.trim()
+    if (!code) {
+      setModalError('Please enter a course or class code.')
+      return
+    }
+
+    setJoining(true)
+    setModalError('')
+    try {
+      const res = await fetch('/api/student/courses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      })
+      const data = await res.json()
+      if (res.ok && data.ok) {
+        setIsEnrollModalOpen(false)
+        setClassCodeInput('')
+        setEnrollMessage({ type: 'success', text: data.message || 'Successfully enrolled in class!' })
+        await loadCourses()
+      } else {
+        setModalError(data.message || 'Could not find class. Please check the code.')
+      }
+    } catch {
+      setModalError('Network error while joining class.')
+    } finally {
+      setJoining(false)
+    }
+  }
+
   return (
     <DashboardLayout role="student">
       <div className="space-y-6">
@@ -105,11 +146,23 @@ function StudentCoursesContent() {
             </p>
           </div>
 
-          <Link href="/student/scan">
-            <Button className="gap-2 bg-[#6558ee] text-xs font-semibold text-white shadow-sm hover:bg-[#5549d8]">
-              <QrCode className="size-4" /> Scan QR Code
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Button
+              onClick={() => {
+                setModalError('')
+                setClassCodeInput('')
+                setIsEnrollModalOpen(true)
+              }}
+              className="gap-1.5 bg-[#6558ee] text-xs font-semibold text-white shadow-sm hover:bg-[#5549d8]"
+            >
+              <Plus className="size-4" /> Enroll in Class
             </Button>
-          </Link>
+            <Link href="/student/scan">
+              <Button variant="outline" className="gap-2 border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+                <QrCode className="size-4 text-[#6558ee]" /> Scan QR Code
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Enrollment Notification Banner */}
@@ -202,6 +255,106 @@ function StudentCoursesContent() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        )}
+        {/* Modal: Enroll in Class */}
+        {isEnrollModalOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-in fade-in duration-150"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setIsEnrollModalOpen(false)
+            }}
+          >
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-150">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex size-9 items-center justify-center rounded-xl bg-[#6558ee]/10 text-[#6558ee]">
+                    <GraduationCap className="size-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900">Enroll in Course</h3>
+                    <p className="text-xs text-slate-500">Join a class via code or camera scan</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsEnrollModalOpen(false)}
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
+
+              {modalError && (
+                <div className="mt-4 rounded-xl bg-rose-50 p-3 text-xs font-medium text-rose-700 border border-rose-200 flex items-center gap-2">
+                  <AlertCircle className="size-4 shrink-0 text-rose-600" />
+                  <span>{modalError}</span>
+                </div>
+              )}
+
+              <div className="mt-5 space-y-4">
+                {/* Option 1: Enter Class / Course Code */}
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+                    <KeyRound className="size-4 text-[#6558ee]" />
+                    <span>Option 1: Enter Class Code</span>
+                  </div>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    Provided by your instructor (e.g. CS-401 or Class ID).
+                  </p>
+                  <form onSubmit={handleJoinByCode} className="mt-3 space-y-2.5">
+                    <Input
+                      value={classCodeInput}
+                      onChange={(e) => setClassCodeInput(e.target.value)}
+                      placeholder="e.g. CS-401"
+                      className="bg-white font-mono uppercase text-xs"
+                      required
+                    />
+                    <Button
+                      type="submit"
+                      disabled={joining}
+                      className="w-full bg-[#6558ee] text-xs font-semibold text-white hover:bg-[#5549d8]"
+                    >
+                      {joining ? (
+                        <>
+                          <Loader2 className="mr-1.5 size-3.5 animate-spin" /> Enrolling…
+                        </>
+                      ) : (
+                        'Join Class by Code'
+                      )}
+                    </Button>
+                  </form>
+                </div>
+
+                {/* Divider */}
+                <div className="relative flex items-center justify-center text-xs uppercase text-slate-400">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-200" />
+                  </div>
+                  <span className="relative bg-white px-2 text-[11px] font-medium text-slate-400">OR</span>
+                </div>
+
+                {/* Option 2: Scan QR Code */}
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+                    <QrCode className="size-4 text-[#6558ee]" />
+                    <span>Option 2: Scan QR Code</span>
+                  </div>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    Scan the enrollment QR or dynamic session QR shown on your instructor&apos;s screen.
+                  </p>
+                  <Link href="/student/scan" className="mt-3 block">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full gap-2 border-[#6558ee]/40 bg-white text-xs font-semibold text-[#6558ee] hover:bg-[#6558ee]/5"
+                    >
+                      <QrCode className="size-3.5" /> Open Camera to Scan QR
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

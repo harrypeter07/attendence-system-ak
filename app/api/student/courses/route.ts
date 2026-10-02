@@ -109,30 +109,61 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, message: auth.error }, { status: auth.status })
     }
 
-    const { classId } = await request.json().catch(() => ({}))
-    if (!classId) {
-      return NextResponse.json({ ok: false, message: 'Class ID is required.' }, { status: 400 })
+    const body = await request.json().catch(() => ({}))
+    const classIdOrCode = (body.classId || body.code || body.classCode || '').trim()
+    if (!classIdOrCode) {
+      return NextResponse.json({ ok: false, message: 'Class ID or Course Code is required.' }, { status: 400 })
     }
 
     const admin = createAdminClient()
     const studentId = auth.profile?.id
 
-    // Check class exists
-    const { data: cls, error: clsErr } = await admin
-      .from('classes')
-      .select('id, name, course:courses(name, code)')
-      .eq('id', classId)
-      .maybeSingle()
+    // Check class exists by UUID id first, then fallback to course code search
+    let cls: any = null
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(classIdOrCode)
 
-    if (clsErr || !cls) {
-      return NextResponse.json({ ok: false, message: 'Class section not found.' }, { status: 404 })
+    if (isUuid) {
+      const { data } = await admin
+        .from('classes')
+        .select('id, name, course:courses(name, code)')
+        .eq('id', classIdOrCode)
+        .maybeSingle()
+      cls = data
     }
+
+    if (!cls) {
+      // Find course matching the provided code (case-insensitive)
+      const { data: courses } = await admin
+        .from('courses')
+        .select('id, name, code')
+        .ilike('code', classIdOrCode)
+        .limit(1)
+
+      if (courses && courses.length > 0) {
+        const matchedCourse = courses[0]
+        // Find latest active class for this course
+        const { data: classMatches } = await admin
+          .from('classes')
+          .select('id, name, course:courses(name, code)')
+          .eq('course_id', matchedCourse.id)
+          .limit(1)
+        if (classMatches && classMatches.length > 0) {
+          cls = classMatches[0]
+        }
+      }
+    }
+
+    if (!cls) {
+      return NextResponse.json({ ok: false, message: 'Class or Course Code not found. Please verify the code.' }, { status: 404 })
+    }
+
+    const targetClassId = cls.id
 
     // Check or create enrollment
     const { data: existing } = await admin
       .from('enrollments')
       .select('id, status')
-      .eq('class_id', classId)
+      .eq('class_id', targetClassId)
       .eq('student_id', studentId)
       .maybeSingle()
 
@@ -140,14 +171,14 @@ export async function POST(request: Request) {
       return NextResponse.json({
         ok: true,
         message: `You are already enrolled in ${(cls.course as any)?.name || 'this course'} (${cls.name})!`,
-        data: existing,
+        data: { ...existing, classId: targetClassId, courseName: (cls.course as any)?.name, courseCode: (cls.course as any)?.code, className: cls.name },
       })
     }
 
     const { data: newEnrollment, error: enrollErr } = await admin
       .from('enrollments')
       .insert({
-        class_id: classId,
+        class_id: targetClassId,
         student_id: studentId,
         status: 'active',
       })
@@ -161,7 +192,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       message: `Successfully enrolled in ${(cls.course as any)?.name || 'Course'} (${cls.name})!`,
-      data: newEnrollment,
+      data: { ...newEnrollment, classId: targetClassId, courseName: (cls.course as any)?.name, courseCode: (cls.course as any)?.code, className: cls.name },
     })
   } catch (err: any) {
     console.error('Direct enrollment error:', err)

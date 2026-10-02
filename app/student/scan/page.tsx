@@ -5,10 +5,12 @@ import Link from 'next/link'
 import {
   AlertCircle,
   ArrowLeft,
+  BookOpen,
   Camera,
   CheckCircle2,
   Compass,
   FileCheck2,
+  GraduationCap,
   Loader2,
   MapPin,
   QrCode,
@@ -25,6 +27,7 @@ type ScanState = 'idle' | 'scanning' | 'verifying' | 'success' | 'error'
 
 export default function StudentScanPage() {
   const [scanState, setScanState] = useState<ScanState>('idle')
+  const [resultMode, setResultMode] = useState<'attendance' | 'enrollment'>('attendance')
   const [cameraError, setCameraError] = useState<string>('')
   const [gpsCoords, setGpsCoords] = useState<{ latitude: number; longitude: number } | null>(null)
   const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null)
@@ -207,13 +210,17 @@ export default function StudentScanPage() {
       })
       const data = await res.json()
       if (res.ok && data.ok) {
+        setResultMode('enrollment')
         setScanState('success')
         setResultMessage(data.message || `Successfully enrolled into ${courseNameHint || 'class'}!`)
+        setResultData(data.data || { courseName: courseNameHint || 'Enrolled Class' })
       } else {
+        setResultMode('enrollment')
         setScanState('error')
         setResultMessage(data.message || 'Could not enroll into class.')
       }
     } catch {
+      setResultMode('enrollment')
       setScanState('error')
       setResultMessage('Network error while processing class enrollment.')
     }
@@ -257,16 +264,19 @@ export default function StudentScanPage() {
       const data = await response.json()
 
       if (response.ok && data.ok) {
+        setResultMode('attendance')
         setScanState('success')
         setResultMessage(data.message || 'Attendance verified and recorded successfully!')
         setResultData(data.data)
       } else {
+        setResultMode('attendance')
         setScanState('error')
         setResultMessage(data.message || 'Attendance verification failed.')
         setResultData(data)
       }
     } catch (err) {
       console.error('Verification error:', err)
+      setResultMode('attendance')
       setScanState('error')
       setResultMessage('Network error during verification. Please check your connection and try again.')
     }
@@ -331,51 +341,108 @@ export default function StudentScanPage() {
 
         {/* Scan Results: SUCCESS */}
         {scanState === 'success' && (
-          <Card className="border-emerald-300 bg-emerald-50/60 shadow-lg text-emerald-950 overflow-hidden">
-            <div className="bg-emerald-600 p-4 text-white flex items-center gap-3">
-              <CheckCircle2 className="size-7 shrink-0" />
-              <div>
-                <h3 className="font-bold text-base">Attendance Verified!</h3>
-                <p className="text-xs text-emerald-100">Your presence has been officially recorded in the database.</p>
-              </div>
-            </div>
-            <CardContent className="p-6 space-y-4">
-              <div className="rounded-xl bg-white p-4 border border-emerald-200 space-y-2 shadow-xs">
-                <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                  <span className="text-xs text-slate-500 font-medium">Course</span>
-                  <span className="text-sm font-bold text-slate-900">
-                    {resultData?.courseName} ({resultData?.courseCode})
-                  </span>
+          <Card className="border-emerald-300 bg-emerald-50/60 shadow-lg text-emerald-950 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            {resultMode === 'enrollment' ? (
+              <>
+                <div className="bg-emerald-600 p-4 text-white flex items-center gap-3">
+                  <div className="flex size-10 items-center justify-center rounded-xl bg-white/20">
+                    <GraduationCap className="size-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-base">Enrolled in Class!</h3>
+                    <p className="text-xs text-emerald-100">You are now officially registered on this class roster.</p>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center border-b border-slate-100 py-2">
-                  <span className="text-xs text-slate-500 font-medium">Recorded At</span>
-                  <span className="text-xs font-mono text-slate-800">
-                    {resultData?.markedAt ? new Date(resultData.markedAt).toLocaleTimeString() : 'Just now'}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center pt-2">
-                  <span className="text-xs text-slate-500 font-medium">Classroom Distance</span>
-                  <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
-                    {resultData?.distanceMeters !== null ? `✓ ${resultData?.distanceMeters}m away` : '✓ Geofence Verified'}
-                  </span>
-                </div>
-              </div>
+                <CardContent className="p-6 space-y-4">
+                  <div className="rounded-xl bg-white p-4 border border-emerald-200 space-y-2 shadow-xs">
+                    <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                      <span className="text-xs text-slate-500 font-medium">Course</span>
+                      <span className="text-sm font-bold text-slate-900">
+                        {resultData?.courseName || 'Class Course'} {resultData?.courseCode ? `(${resultData.courseCode})` : ''}
+                      </span>
+                    </div>
+                    {resultData?.className && (
+                      <div className="flex justify-between items-center border-b border-slate-100 py-2">
+                        <span className="text-xs text-slate-500 font-medium">Section</span>
+                        <span className="text-xs font-semibold text-slate-800">{resultData.className}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center pt-2">
+                      <span className="text-xs text-slate-500 font-medium">Status</span>
+                      <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
+                        ✓ Active Enrollment
+                      </span>
+                    </div>
+                  </div>
 
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Button
-                  onClick={resetToScanAgain}
-                  variant="outline"
-                  className="flex-1 border-emerald-300 text-emerald-800 hover:bg-emerald-100"
-                >
-                  <RefreshCw className="size-4 mr-2" /> Scan Another Class
-                </Button>
-                <Link href="/student/attendance" className="flex-1">
-                  <Button className="w-full bg-emerald-700 text-white hover:bg-emerald-800">
-                    <FileCheck2 className="size-4 mr-2" /> View Attendance History
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
+                  <p className="text-xs text-emerald-800 text-center font-medium">
+                    {resultMessage || 'Your enrollment has been successfully recorded.'}
+                  </p>
+
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Button
+                      onClick={resetToScanAgain}
+                      variant="outline"
+                      className="flex-1 border-emerald-300 text-emerald-800 hover:bg-emerald-100"
+                    >
+                      <RefreshCw className="size-4 mr-2" /> Scan Another QR
+                    </Button>
+                    <Link href="/student/courses" className="flex-1">
+                      <Button className="w-full bg-[#6558ee] text-white hover:bg-[#5549d8]">
+                        <BookOpen className="size-4 mr-2" /> View Enrolled Courses
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </>
+            ) : (
+              <>
+                <div className="bg-emerald-600 p-4 text-white flex items-center gap-3">
+                  <CheckCircle2 className="size-7 shrink-0" />
+                  <div>
+                    <h3 className="font-bold text-base">Attendance Verified!</h3>
+                    <p className="text-xs text-emerald-100">Your presence has been officially recorded in the database.</p>
+                  </div>
+                </div>
+                <CardContent className="p-6 space-y-4">
+                  <div className="rounded-xl bg-white p-4 border border-emerald-200 space-y-2 shadow-xs">
+                    <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                      <span className="text-xs text-slate-500 font-medium">Course</span>
+                      <span className="text-sm font-bold text-slate-900">
+                        {resultData?.courseName} ({resultData?.courseCode})
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-slate-100 py-2">
+                      <span className="text-xs text-slate-500 font-medium">Recorded At</span>
+                      <span className="text-xs font-mono text-slate-800">
+                        {resultData?.markedAt ? new Date(resultData.markedAt).toLocaleTimeString() : 'Just now'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center pt-2">
+                      <span className="text-xs text-slate-500 font-medium">Classroom Distance</span>
+                      <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
+                        {resultData?.distanceMeters !== null ? `✓ ${resultData?.distanceMeters}m away` : '✓ Geofence Verified'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Button
+                      onClick={resetToScanAgain}
+                      variant="outline"
+                      className="flex-1 border-emerald-300 text-emerald-800 hover:bg-emerald-100"
+                    >
+                      <RefreshCw className="size-4 mr-2" /> Scan Another Class
+                    </Button>
+                    <Link href="/student/attendance" className="flex-1">
+                      <Button className="w-full bg-emerald-700 text-white hover:bg-emerald-800">
+                        <FileCheck2 className="size-4 mr-2" /> View Attendance History
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </>
+            )}
           </Card>
         )}
 

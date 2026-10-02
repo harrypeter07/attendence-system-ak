@@ -108,10 +108,15 @@ export default function StudentDashboardPage() {
             </p>
           </div>
 
-          <div className="relative z-10 shrink-0">
+          <div className="relative z-10 flex flex-wrap items-center gap-2.5 shrink-0">
+            <Link href="/student/courses">
+              <Button variant="outline" className="h-11 gap-2 rounded-2xl border-white/30 bg-white/10 px-4 text-xs font-bold text-white backdrop-blur-xs transition hover:bg-white hover:text-slate-900">
+                <GraduationCap className="size-4" /> Enroll in Class
+              </Button>
+            </Link>
             <Link href="/student/scan">
-              <Button className="h-12 gap-2 rounded-2xl bg-[#6558ee] px-6 text-sm font-bold text-white shadow-lg shadow-[#6558ee]/40 transition hover:bg-[#5549d8]">
-                <QrCode className="size-5" /> Scan Attendance Now
+              <Button className="h-11 gap-2 rounded-2xl bg-[#6558ee] px-5 text-xs font-bold text-white shadow-lg shadow-[#6558ee]/40 transition hover:bg-[#5549d8]">
+                <QrCode className="size-4" /> Scan Attendance
               </Button>
             </Link>
           </div>

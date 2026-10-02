@@ -338,8 +338,13 @@ export default function TeacherClassesPage() {
 
         {/* Modal: Create New Class */}
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-            <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl border border-slate-200">
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs animate-in fade-in duration-150"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setIsModalOpen(false)
+            }}
+          >
+            <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-150">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
                   <h3 className="text-base font-bold text-slate-900">Create or Assign Class</h3>
@@ -515,8 +520,13 @@ export default function TeacherClassesPage() {
         )}
         {/* Modal: Special Enrollment QR Code */}
         {enrollmentClass && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-in fade-in duration-150"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setEnrollmentClass(null)
+            }}
+          >
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-150">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
                   <div className="flex size-9 items-center justify-center rounded-xl bg-[#6558ee]/10 text-[#6558ee]">
@@ -563,6 +573,12 @@ export default function TeacherClassesPage() {
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-slate-700">Course:</span>
                   <span className="font-medium text-slate-900">{enrollmentClass.course?.name}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-700">Course / Class Code:</span>
+                  <span className="font-mono font-bold text-xs bg-white px-2 py-0.5 rounded border border-slate-200 text-[#6558ee]">
+                    {enrollmentClass.course?.code || enrollmentClass.id.slice(0, 8).toUpperCase()}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-slate-700">Direct Join Link:</span>
