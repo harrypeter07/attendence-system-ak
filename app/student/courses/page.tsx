@@ -1,8 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import {
+  AlertCircle,
   ArrowLeft,
   BookOpen,
   Calendar,
@@ -12,6 +14,7 @@ import {
   MapPin,
   QrCode,
   User,
+  X,
 } from 'lucide-react'
 import { DashboardLayout } from '@/components/dashboard-layout'
 import { Button } from '@/components/ui/button'
@@ -36,26 +39,52 @@ interface EnrolledCourse {
   percentage: number
 }
 
-export default function StudentCoursesPage() {
+function StudentCoursesContent() {
+  const searchParams = useSearchParams()
+  const joinClassId = searchParams.get('join')
+
   const [courses, setCourses] = useState<EnrolledCourse[]>([])
   const [loading, setLoading] = useState(true)
+  const [enrollMessage, setEnrollMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  async function loadCourses() {
+    try {
+      const res = await fetch('/api/student/courses')
+      const json = await res.json()
+      if (json.ok && json.data) {
+        setCourses(json.data)
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    async function loadCourses() {
-      try {
-        const res = await fetch('/api/student/courses')
-        const json = await res.json()
-        if (json.ok && json.data) {
-          setCourses(json.data)
+    async function handleAutoJoin() {
+      if (joinClassId) {
+        try {
+          const res = await fetch('/api/student/courses', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ classId: joinClassId }),
+          })
+          const data = await res.json()
+          if (res.ok && data.ok) {
+            setEnrollMessage({ type: 'success', text: data.message || 'Successfully joined class!' })
+          } else {
+            setEnrollMessage({ type: 'error', text: data.message || 'Could not join class.' })
+          }
+        } catch {
+          setEnrollMessage({ type: 'error', text: 'Network error joining class.' })
         }
-      } catch (err) {
-        console.error(err)
-      } finally {
-        setLoading(false)
       }
+      await loadCourses()
     }
-    loadCourses()
-  }, [])
+
+    handleAutoJoin()
+  }, [joinClassId])
 
   return (
     <DashboardLayout role="student">
@@ -82,6 +111,32 @@ export default function StudentCoursesPage() {
             </Button>
           </Link>
         </div>
+
+        {/* Enrollment Notification Banner */}
+        {enrollMessage && (
+          <div
+            className={`flex items-center justify-between rounded-xl border p-4 text-xs font-medium animate-in fade-in duration-200 ${
+              enrollMessage.type === 'success'
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                : 'border-rose-200 bg-rose-50 text-rose-800'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              {enrollMessage.type === 'success' ? (
+                <CheckCircle2 className="size-4.5 text-emerald-600 shrink-0" />
+              ) : (
+                <AlertCircle className="size-4.5 text-rose-600 shrink-0" />
+              )}
+              <span>{enrollMessage.text}</span>
+            </div>
+            <button
+              onClick={() => setEnrollMessage(null)}
+              className="rounded-md p-1 hover:bg-black/5"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex h-72 items-center justify-center">
@@ -151,5 +206,19 @@ export default function StudentCoursesPage() {
         )}
       </div>
     </DashboardLayout>
+  )
+}
+
+export default function StudentCoursesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <Loader2 className="size-8 animate-spin text-[#6558ee]" />
+        </div>
+      }
+    >
+      <StudentCoursesContent />
+    </Suspense>
   )
 }

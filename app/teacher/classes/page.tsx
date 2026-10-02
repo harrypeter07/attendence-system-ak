@@ -7,14 +7,19 @@ import {
   BookOpen,
   Calendar,
   CheckCircle2,
+  Copy,
   GraduationCap,
   Loader2,
   MapPin,
+  Maximize2,
   Plus,
   QrCode,
+  Share2,
   Users,
   X,
+  Zap,
 } from 'lucide-react'
+import QRCode from 'qrcode'
 import { DashboardLayout } from '@/components/dashboard-layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -47,6 +52,50 @@ export default function TeacherClassesPage() {
   const [className, setClassName] = useState('Section A')
   const [room, setRoom] = useState('')
   const [semester, setSemester] = useState('Spring 2026')
+
+  // Enrollment Modal state
+  const [enrollmentClass, setEnrollmentClass] = useState<any | null>(null)
+  const [enrollmentQrDataUrl, setEnrollmentQrDataUrl] = useState<string>('')
+  const [copiedLink, setCopiedLink] = useState(false)
+
+  async function openEnrollmentQrModal(cls: any) {
+    setEnrollmentClass(cls)
+    setCopiedLink(false)
+
+    // Build the join payload/url
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://attendion.vercel.app'
+    const joinUrl = `${origin}/student/courses?join=${cls.id}`
+    const qrPayload = JSON.stringify({
+      type: 'enrollment',
+      classId: cls.id,
+      courseCode: cls.course?.code,
+      courseName: cls.course?.name,
+      joinUrl,
+    })
+
+    try {
+      const url = await QRCode.toDataURL(qrPayload, {
+        width: 320,
+        margin: 2,
+        color: {
+          dark: '#0f172a',
+          light: '#ffffff',
+        },
+      })
+      setEnrollmentQrDataUrl(url)
+    } catch (err) {
+      console.error('Error generating enrollment QR code:', err)
+    }
+  }
+
+  function handleCopyJoinLink() {
+    if (!enrollmentClass) return
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://attendion.vercel.app'
+    const joinUrl = `${origin}/student/courses?join=${enrollmentClass.id}`
+    navigator.clipboard.writeText(joinUrl)
+    setCopiedLink(true)
+    setTimeout(() => setCopiedLink(false), 2500)
+  }
 
   async function loadClasses() {
     try {
@@ -267,11 +316,20 @@ export default function TeacherClassesPage() {
                     )}
                   </div>
 
-                  <Link href={`/teacher/attendance/new?classId=${cls.id}`} className="block">
-                    <Button className="w-full gap-2 bg-[#6558ee] text-xs font-semibold text-white hover:bg-[#5549d8]">
-                      <QrCode className="size-3.5" /> Start Attendance Session
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      onClick={() => openEnrollmentQrModal(cls)}
+                      variant="outline"
+                      className="gap-1.5 border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      <Share2 className="size-3.5 text-[#6558ee]" /> Enrollment QR
                     </Button>
-                  </Link>
+                    <Link href={`/teacher/attendance/new?classId=${cls.id}`} className="block">
+                      <Button className="w-full gap-1.5 bg-[#6558ee] text-xs font-semibold text-white hover:bg-[#5549d8]">
+                        <QrCode className="size-3.5" /> Start Session
+                      </Button>
+                    </Link>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -452,6 +510,123 @@ export default function TeacherClassesPage() {
                   </Button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+        {/* Modal: Special Enrollment QR Code */}
+        {enrollmentClass && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex size-9 items-center justify-center rounded-xl bg-[#6558ee]/10 text-[#6558ee]">
+                    <QrCode className="size-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900">Class Enrollment QR</h3>
+                    <p className="text-xs text-slate-500">
+                      {enrollmentClass.course?.code} · {enrollmentClass.name}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setEnrollmentClass(null)}
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
+
+              <div className="my-5 flex flex-col items-center justify-center">
+                <div className="rounded-2xl border-2 border-slate-900/10 bg-white p-4 shadow-md">
+                  {enrollmentQrDataUrl ? (
+                    <img
+                      src={enrollmentQrDataUrl}
+                      alt="Class Enrollment QR Code"
+                      className="size-64 object-contain"
+                    />
+                  ) : (
+                    <div className="flex size-64 items-center justify-center">
+                      <Loader2 className="size-8 animate-spin text-[#6558ee]" />
+                    </div>
+                  )}
+                </div>
+                <p className="mt-3 text-center text-xs font-medium text-slate-600">
+                  Project this on your classroom screen or print on your course syllabus.
+                </p>
+                <p className="mt-0.5 text-center text-[11px] text-slate-400">
+                  Students scanning this QR code are enrolled instantly in this course roster.
+                </p>
+              </div>
+
+              <div className="space-y-3 rounded-xl bg-slate-50 p-3.5 border border-slate-100">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-700">Course:</span>
+                  <span className="font-medium text-slate-900">{enrollmentClass.course?.name}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-700">Direct Join Link:</span>
+                  <button
+                    onClick={handleCopyJoinLink}
+                    className="inline-flex items-center gap-1 font-semibold text-[#6558ee] hover:underline text-xs"
+                  >
+                    {copiedLink ? (
+                      <>
+                        <CheckCircle2 className="size-3.5 text-emerald-600" />
+                        <span className="text-emerald-600">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="size-3.5" />
+                        <span>Copy Link</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-5 flex items-center justify-between gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const printWin = window.open('', '_blank')
+                    if (printWin) {
+                      printWin.document.write(`
+                        <html>
+                          <head>
+                            <title>Enrollment QR - ${enrollmentClass.course?.name}</title>
+                            <style>
+                              body { font-family: system-ui, sans-serif; text-align: center; padding: 40px; }
+                              img { width: 320px; height: 320px; margin: 20px auto; }
+                              h1 { font-size: 24px; margin-bottom: 4px; }
+                              h2 { font-size: 16px; color: #64748b; font-weight: normal; margin-top: 0; }
+                              p { color: #475569; font-size: 14px; max-width: 400px; margin: 0 auto; }
+                            </style>
+                          </head>
+                          <body>
+                            <h1>${enrollmentClass.course?.name} (${enrollmentClass.course?.code})</h1>
+                            <h2>${enrollmentClass.name} · Room ${enrollmentClass.room || 'TBD'}</h2>
+                            <img src="${enrollmentQrDataUrl}" />
+                            <p>Scan with your phone or camera to join this class on Attendion Smart Attendance.</p>
+                          </body>
+                        </html>
+                      `)
+                      printWin.document.close()
+                      printWin.focus()
+                      setTimeout(() => printWin.print(), 250)
+                    }
+                  }}
+                  className="flex-1 gap-1.5 text-xs border-slate-300 text-slate-700 hover:bg-slate-50"
+                >
+                  <Maximize2 className="size-3.5" /> Print / Project
+                </Button>
+                <Button
+                  onClick={() => setEnrollmentClass(null)}
+                  className="flex-1 bg-[#6558ee] text-xs font-semibold text-white hover:bg-[#5549d8]"
+                >
+                  Done
+                </Button>
+              </div>
             </div>
           </div>
         )}

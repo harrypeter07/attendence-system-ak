@@ -150,18 +150,29 @@ export default function StudentScanPage() {
 
     let sessionId = ''
     let token = ''
+    let enrollmentClassId = ''
+    let courseNameHint = ''
 
     try {
       // Try JSON payload first
       const parsed = JSON.parse(text)
-      sessionId = parsed.sessionId || parsed.session_id
-      token = parsed.token
+      if (parsed.type === 'enrollment' || (parsed.classId && !parsed.sessionId)) {
+        enrollmentClassId = parsed.classId
+        courseNameHint = parsed.courseName || ''
+      } else {
+        sessionId = parsed.sessionId || parsed.session_id
+        token = parsed.token
+      }
     } catch {
       // Try URL parameters or raw format
       try {
         const url = new URL(text)
-        sessionId = url.searchParams.get('session') || ''
-        token = url.searchParams.get('token') || ''
+        if (url.searchParams.has('join')) {
+          enrollmentClassId = url.searchParams.get('join') || ''
+        } else {
+          sessionId = url.searchParams.get('session') || ''
+          token = url.searchParams.get('token') || ''
+        }
       } catch {
         // Fallback: pipe/colon separated "sessionId:token"
         const parts = text.split(':')
@@ -172,6 +183,12 @@ export default function StudentScanPage() {
       }
     }
 
+    // If an Enrollment QR code was scanned
+    if (enrollmentClassId) {
+      await handleEnrollmentScan(enrollmentClassId, courseNameHint)
+      return
+    }
+
     if (!sessionId || !token) {
       setScanState('error')
       setResultMessage('Invalid QR Code. Please scan the official classroom QR code displayed by your instructor.')
@@ -179,6 +196,27 @@ export default function StudentScanPage() {
     }
 
     await submitVerification(sessionId, token)
+  }
+
+  async function handleEnrollmentScan(classId: string, courseNameHint?: string) {
+    try {
+      const res = await fetch('/api/student/courses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ classId }),
+      })
+      const data = await res.json()
+      if (res.ok && data.ok) {
+        setScanState('success')
+        setResultMessage(data.message || `Successfully enrolled into ${courseNameHint || 'class'}!`)
+      } else {
+        setScanState('error')
+        setResultMessage(data.message || 'Could not enroll into class.')
+      }
+    } catch {
+      setScanState('error')
+      setResultMessage('Network error while processing class enrollment.')
+    }
   }
 
   // 5. Submit to Verification Endpoint
