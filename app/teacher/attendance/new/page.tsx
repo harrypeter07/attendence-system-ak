@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -55,12 +55,13 @@ export default function NewAttendanceSessionPage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [selectedClassId, setSelectedClassId] = useState('')
-  const [latitude, setLatitude] = useState<number>(12.9716)
-  const [longitude, setLongitude] = useState<number>(77.5946)
-  const [radiusMeters, setRadiusMeters] = useState<number>(100)
-  const [locationStatus, setLocationStatus] = useState<string>('')
+  const [latitude, setLatitude] = useState<number>(0)
+  const [longitude, setLongitude] = useState<number>(0)
+  const [radiusMeters, setRadiusMeters] = useState<number>(150)
+  const [locationStatus, setLocationStatus] = useState<string>('Detecting device location…')
   const [error, setError] = useState<string>('')
   const [successNotice, setSuccessNotice] = useState<string>('')
+  const hasDetectedGpsRef = useRef(false)
 
   // Inline Class Creation Modal State
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -86,10 +87,12 @@ export default function NewAttendanceSessionPage() {
             const exists = json.data.some((c: ClassItem) => c.id === prev)
             return exists ? prev : json.data[0].id
           })
-          if (json.data[0].location) {
-            setLatitude(Number(json.data[0].location.latitude) || 12.9716)
-            setLongitude(Number(json.data[0].location.longitude) || 77.5946)
-            setRadiusMeters(json.data[0].location.radius_meters || 100)
+          if (json.data[0].location && !hasDetectedGpsRef.current) {
+            setRadiusMeters(json.data[0].location.radius_meters || 150)
+            if (latitude === 0 && longitude === 0) {
+              setLatitude(Number(json.data[0].location.latitude) || 0)
+              setLongitude(Number(json.data[0].location.longitude) || 0)
+            }
           }
         }
       }
@@ -112,6 +115,7 @@ export default function NewAttendanceSessionPage() {
   }
 
   useEffect(() => {
+    detectCurrentLocation()
     loadClasses()
     loadCatalog()
   }, [])
@@ -197,9 +201,12 @@ export default function NewAttendanceSessionPage() {
     setSelectedClassId(classId)
     const cls = classes.find((c) => c.id === classId)
     if (cls?.location) {
-      setLatitude(Number(cls.location.latitude) || 12.9716)
-      setLongitude(Number(cls.location.longitude) || 77.5946)
       setRadiusMeters(cls.location.radius_meters || 100)
+      // Only fallback to class coordinates if real device GPS has not yet been acquired
+      if (latitude === 12.9716 && longitude === 77.5946) {
+        setLatitude(Number(cls.location.latitude) || 12.9716)
+        setLongitude(Number(cls.location.longitude) || 77.5946)
+      }
     }
   }
 
@@ -212,6 +219,7 @@ export default function NewAttendanceSessionPage() {
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        hasDetectedGpsRef.current = true
         setLatitude(parseFloat(pos.coords.latitude.toFixed(6)))
         setLongitude(parseFloat(pos.coords.longitude.toFixed(6)))
         setLocationStatus(
@@ -220,7 +228,7 @@ export default function NewAttendanceSessionPage() {
       },
       (err) => {
         console.error(err)
-        setLocationStatus(`Could not acquire GPS: ${err.message}. Using current coordinates.`)
+        setLocationStatus(`Could not acquire GPS: ${err.message}.`)
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     )

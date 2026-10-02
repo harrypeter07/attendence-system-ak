@@ -153,6 +153,31 @@ export async function PATCH(
       return NextResponse.json({ ok: true, message: 'Session ended successfully' })
     }
 
+    if (body.action === 'update_location' || (body.latitude !== undefined && body.longitude !== undefined)) {
+      const lat = Number(body.latitude)
+      const lng = Number(body.longitude)
+      const rad = Number(body.radiusMeters) || 100
+
+      if (isNaN(lat) || isNaN(lng)) {
+        return NextResponse.json({ ok: false, message: 'Invalid latitude or longitude' }, { status: 400 })
+      }
+
+      await admin
+        .from('attendance_sessions')
+        .update({
+          latitude: lat,
+          longitude: lng,
+          radius_meters: rad,
+        })
+        .eq('id', sessionId)
+
+      return NextResponse.json({
+        ok: true,
+        message: 'Classroom GPS geofence updated successfully',
+        data: { latitude: lat, longitude: lng, radiusMeters: rad },
+      })
+    }
+
     return NextResponse.json({ ok: false, message: 'Invalid action' }, { status: 400 })
   } catch (err) {
     console.error('Update session error:', err)

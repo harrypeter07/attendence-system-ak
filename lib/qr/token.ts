@@ -2,7 +2,7 @@ import crypto from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export const TOKEN_ROTATION_INTERVAL_SECONDS = 15
-export const TOKEN_GRACE_PERIOD_SECONDS = 4 // To accommodate network latency while scanning
+export const TOKEN_GRACE_PERIOD_SECONDS = 10 // Generous grace period for network latency and mobile clock jitter
 
 /**
  * Creates a cryptographically secure random token string.

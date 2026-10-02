@@ -38,24 +38,37 @@ export async function POST(request: Request) {
     const { sessionId, token, latitude, longitude } = validation.data
     const admin = createAdminClient()
 
-    // 1. Fetch Session details
-    const { data: session, error: sessionErr } = await admin
-      .from('attendance_sessions')
-      .select(`
-        id,
-        class_id,
-        status,
-        latitude,
-        longitude,
-        radius_meters,
-        class:classes (
+    // 1. Concurrently fetch session details, validate dynamic QR token, and check duplicate scans
+    const [
+      { data: session, error: sessionErr },
+      tokenResult,
+      { data: existingRecord },
+    ] = await Promise.all([
+      admin
+        .from('attendance_sessions')
+        .select(`
           id,
-          name,
-          course:courses (id, code, name)
-        )
-      `)
-      .eq('id', sessionId)
-      .maybeSingle()
+          class_id,
+          status,
+          latitude,
+          longitude,
+          radius_meters,
+          class:classes (
+            id,
+            name,
+            course:courses (id, code, name)
+          )
+        `)
+        .eq('id', sessionId)
+        .maybeSingle(),
+      validateSessionToken(sessionId, token),
+      admin
+        .from('attendance_records')
+        .select('id, marked_at')
+        .eq('session_id', sessionId)
+        .eq('student_id', studentId)
+        .maybeSingle(),
+    ])
 
     if (sessionErr || !session) {
       return NextResponse.json({ ok: false, message: 'Attendance session not found' }, { status: 404 })
@@ -68,47 +81,9 @@ export async function POST(request: Request) {
       )
     }
 
-    // 2. Verify Student is Enrolled in this class (Auto-Enrolls on First Scan!)
-    let { data: enrollment } = await admin
-      .from('enrollments')
-      .select('id, status')
-      .eq('class_id', session.class_id)
-      .eq('student_id', studentId)
-      .maybeSingle()
-
-    if (!enrollment) {
-      // Seamless auto-enrollment on first scan: zero administrative paperwork
-      const { data: newEnrollment, error: enrollErr } = await admin
-        .from('enrollments')
-        .insert({
-          class_id: session.class_id,
-          student_id: studentId,
-          status: 'active',
-        })
-        .select('id, status')
-        .single()
-
-      if (!enrollErr && newEnrollment) {
-        enrollment = newEnrollment
-      }
-    } else if (enrollment.status !== 'active') {
-      await admin.from('attendance_attempts').insert({
-        session_id: sessionId,
-        student_id: studentId,
-        success: false,
-        reason: 'Student enrollment is inactive or suspended',
-      })
-
-      return NextResponse.json(
-        { ok: false, message: 'Your enrollment in this class is suspended.' },
-        { status: 403 }
-      )
-    }
-
-    // 3. Verify Dynamic QR Token (Cryptographic hash + Expiration)
-    const tokenResult = await validateSessionToken(sessionId, token)
+    // 2. Validate Dynamic QR Token
     if (!tokenResult.valid) {
-      await admin.from('attendance_attempts').insert({
+      void admin.from('attendance_attempts').insert({
         session_id: sessionId,
         student_id: studentId,
         token_id: tokenResult.tokenId || null,
@@ -116,7 +91,7 @@ export async function POST(request: Request) {
         reason: tokenResult.reason || 'Token invalid or expired',
       })
 
-      await logAuditEvent({
+      void logAuditEvent({
         actorId: studentId,
         action: 'ATTENDANCE_FAILED_EXPIRED',
         entityType: 'ATTENDANCE_SESSION',
@@ -135,6 +110,26 @@ export async function POST(request: Request) {
       )
     }
 
+    // 3. Database-level Duplicate Protection Check
+    if (existingRecord) {
+      void admin.from('attendance_attempts').insert({
+        session_id: sessionId,
+        student_id: studentId,
+        token_id: tokenResult.tokenId,
+        success: false,
+        reason: 'Duplicate scan attempt',
+      })
+
+      return NextResponse.json(
+        {
+          ok: false,
+          message: 'Your attendance has already been recorded for this session.',
+          markedAt: existingRecord.marked_at,
+        },
+        { status: 409 }
+      )
+    }
+
     // 4. Verify Location / Geofence
     const sessionLat = Number(session.latitude)
     const sessionLng = Number(session.longitude)
@@ -144,10 +139,21 @@ export async function POST(request: Request) {
 
     // Check location if session has classroom coordinates specified
     if (sessionLat !== 0 || sessionLng !== 0) {
+      if (latitude === 0 && longitude === 0) {
+        return NextResponse.json(
+          {
+            ok: false,
+            errorType: 'gps_required',
+            message: 'Classroom GPS verification is required. Your device location was not detected. Please enable GPS/Location in your browser and device settings.',
+          },
+          { status: 400 }
+        )
+      }
+
       distanceMeters = calculateDistance(sessionLat, sessionLng, latitude, longitude)
 
       if (distanceMeters > radiusMeters) {
-        await admin.from('attendance_attempts').insert({
+        void admin.from('attendance_attempts').insert({
           session_id: sessionId,
           student_id: studentId,
           token_id: tokenResult.tokenId,
@@ -156,7 +162,7 @@ export async function POST(request: Request) {
           distance_meters: distanceMeters,
         })
 
-        await logAuditEvent({
+        void logAuditEvent({
           actorId: studentId,
           action: 'ATTENDANCE_FAILED_LOCATION',
           entityType: 'ATTENDANCE_SESSION',
@@ -183,31 +189,39 @@ export async function POST(request: Request) {
       }
     }
 
-    // 5. Database-level Duplicate Protection Check
-    const { data: existingRecord } = await admin
-      .from('attendance_records')
-      .select('id, marked_at')
-      .eq('session_id', sessionId)
+    // 5. Verify Student is Enrolled in this class (Auto-Enrolls on First Scan!)
+    let { data: enrollment } = await admin
+      .from('enrollments')
+      .select('id, status')
+      .eq('class_id', session.class_id)
       .eq('student_id', studentId)
       .maybeSingle()
 
-    if (existingRecord) {
-      await admin.from('attendance_attempts').insert({
+    if (!enrollment) {
+      const { data: newEnrollment, error: enrollErr } = await admin
+        .from('enrollments')
+        .insert({
+          class_id: session.class_id,
+          student_id: studentId,
+          status: 'active',
+        })
+        .select('id, status')
+        .single()
+
+      if (!enrollErr && newEnrollment) {
+        enrollment = newEnrollment
+      }
+    } else if (enrollment.status !== 'active') {
+      void admin.from('attendance_attempts').insert({
         session_id: sessionId,
         student_id: studentId,
-        token_id: tokenResult.tokenId,
         success: false,
-        reason: 'Duplicate scan attempt',
-        distance_meters: distanceMeters,
+        reason: 'Student enrollment is inactive or suspended',
       })
 
       return NextResponse.json(
-        {
-          ok: false,
-          message: 'Your attendance has already been recorded for this session.',
-          markedAt: existingRecord.marked_at,
-        },
-        { status: 409 }
+        { ok: false, message: 'Your enrollment in this class is suspended.' },
+        { status: 403 }
       )
     }
 
@@ -225,7 +239,6 @@ export async function POST(request: Request) {
     })
 
     if (insertError) {
-      // In case of race condition / unique constraint collision
       if (insertError.code === '23505') {
         return NextResponse.json(
           { ok: false, message: 'Your attendance was already recorded for this session.' },
@@ -236,8 +249,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, message: 'Failed to record attendance' }, { status: 500 })
     }
 
-    // 7. Log success attempt & audit
-    await admin.from('attendance_attempts').insert({
+    // 7. Non-blocking async audit & attempt logging
+    void admin.from('attendance_attempts').insert({
       session_id: sessionId,
       student_id: studentId,
       token_id: tokenResult.tokenId,
@@ -245,7 +258,7 @@ export async function POST(request: Request) {
       distance_meters: distanceMeters,
     })
 
-    await logAuditEvent({
+    void logAuditEvent({
       actorId: studentId,
       action: 'ATTENDANCE_SUCCESS',
       entityType: 'ATTENDANCE_SESSION',

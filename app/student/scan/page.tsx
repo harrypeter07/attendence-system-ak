@@ -29,7 +29,7 @@ import { Input } from '@/components/ui/input'
 type ScanState = 'idle' | 'scanning' | 'verifying' | 'success' | 'error'
 
 export default function StudentScanPage() {
-  const [scanState, setScanState] = useState<ScanState>('idle')
+  const [scanState, setScanState] = useState<ScanState>('scanning')
   const [resultMode, setResultMode] = useState<'attendance' | 'enrollment'>('attendance')
   const [cameraError, setCameraError] = useState<string>('')
   const [gpsCoords, setGpsCoords] = useState<{ latitude: number; longitude: number } | null>(null)
@@ -37,7 +37,7 @@ export default function StudentScanPage() {
   const [gpsStatus, setGpsStatus] = useState<string>('Detecting location…')
   const [resultMessage, setResultMessage] = useState<string>('')
   const [resultData, setResultData] = useState<any>(null)
-  const [scannerInstance, setScannerInstance] = useState<any>(null)
+  const scannerRef = useRef<any>(null)
 
   // Manual fallback inputs
   const [showManual, setShowManual] = useState(false)
@@ -46,9 +46,19 @@ export default function StudentScanPage() {
 
   const isScanningRef = useRef(false)
 
-  // 1. Get Geolocation on mount
+  // 1. Get Geolocation & Start Camera Scanner on mount
   useEffect(() => {
     obtainLocation()
+    startScanner()
+
+    return () => {
+      isScanningRef.current = false
+      if (scannerRef.current) {
+        try {
+          scannerRef.current.stop()
+        } catch {}
+      }
+    }
   }, [])
 
   function obtainLocation() {
@@ -75,7 +85,7 @@ export default function StudentScanPage() {
     )
   }
 
-  // 2. Start Camera Scanner
+  // 2. Start Camera Scanner Directly
   async function startScanner() {
     setCameraError('')
     setScanState('scanning')
@@ -86,17 +96,17 @@ export default function StudentScanPage() {
       const { Html5Qrcode } = await import('html5-qrcode')
 
       // Clean up previous instance if any
-      if (scannerInstance) {
+      if (scannerRef.current) {
         try {
-          await scannerInstance.stop()
+          await scannerRef.current.stop()
         } catch {}
       }
 
       const html5QrCode = new Html5Qrcode('qr-reader-container')
-      setScannerInstance(html5QrCode)
+      scannerRef.current = html5QrCode
 
       const config = {
-        fps: 10,
+        fps: 15,
         qrbox: { width: 260, height: 260 },
         aspectRatio: 1.0,
       }
@@ -116,7 +126,7 @@ export default function StudentScanPage() {
           handleQrDecoded(decodedText)
         },
         () => {
-          // QR code not found in current frame, ignore
+          // Frame processed, QR not yet visible
         }
       )
     } catch (err: any) {
@@ -130,24 +140,14 @@ export default function StudentScanPage() {
   // 3. Stop Scanner Cleanup
   async function stopScanner() {
     isScanningRef.current = false
-    if (scannerInstance) {
+    if (scannerRef.current) {
       try {
-        await scannerInstance.stop()
-        scannerInstance.clear()
+        await scannerRef.current.stop()
+        scannerRef.current.clear()
       } catch {}
     }
     setScanState('idle')
   }
-
-  useEffect(() => {
-    return () => {
-      if (scannerInstance) {
-        try {
-          scannerInstance.stop()
-        } catch {}
-      }
-    }
-  }, [scannerInstance])
 
   // 4. Handle Scanned QR Data & Send Verification Request
   async function handleQrDecoded(text: string) {
@@ -237,7 +237,7 @@ export default function StudentScanPage() {
     let lat = gpsCoords?.latitude || 0
     let lng = gpsCoords?.longitude || 0
 
-    if (navigator.geolocation && (!lat || !lng)) {
+    if ((!lat || !lng) && navigator.geolocation) {
       try {
         const pos: GeolocationPosition = await new Promise((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -247,9 +247,20 @@ export default function StudentScanPage() {
         })
         lat = pos.coords.latitude
         lng = pos.coords.longitude
+        setGpsCoords({ latitude: lat, longitude: lng })
       } catch (err) {
         console.warn('Could not acquire real-time coords:', err)
       }
+    }
+
+    if (!lat || !lng) {
+      setResultMode('attendance')
+      setScanState('error')
+      setResultMessage(
+        'GPS location is required to verify that you are present in the classroom. Please turn on device location & allow browser permissions, then try scanning again.'
+      )
+      setResultData({ errorType: 'gps_required' })
+      return
     }
 
     try {

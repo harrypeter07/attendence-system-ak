@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import {
   ArrowLeft,
   CalendarCheck,
@@ -12,6 +13,7 @@ import {
   MapPin,
   QrCode,
   Search,
+  X,
 } from 'lucide-react'
 import { DashboardLayout } from '@/components/dashboard-layout'
 import { Button } from '@/components/ui/button'
@@ -32,10 +34,13 @@ interface AttendanceRecord {
   source: string
 }
 
-export default function StudentAttendanceHistoryPage() {
+function AttendanceHistoryContent() {
+  const searchParams = useSearchParams()
+  const initialCourse = searchParams.get('course') || searchParams.get('class') || ''
+
   const [records, setRecords] = useState<AttendanceRecord[]>([])
   const [loading, setLoading] = useState(true)
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialCourse)
 
   useEffect(() => {
     async function loadAttendance() {
@@ -80,19 +85,38 @@ export default function StudentAttendanceHistoryPage() {
             </p>
           </div>
 
-          <Link href="/student/scan">
-            <Button className="gap-2 bg-[#6558ee] text-xs font-semibold text-white shadow-sm hover:bg-[#5549d8]">
-              <QrCode className="size-4" /> Scan QR Now
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/student/courses">
+              <Button variant="outline" className="text-xs font-semibold border-slate-300">
+                View All Courses
+              </Button>
+            </Link>
+            <Link href="/student/scan">
+              <Button className="gap-2 bg-[#6558ee] text-xs font-semibold text-white shadow-sm hover:bg-[#5549d8]">
+                <QrCode className="size-4" /> Scan QR Now
+              </Button>
+            </Link>
+          </div>
         </div>
+
+        {query && (
+          <div className="flex items-center gap-2 text-xs bg-[#6558ee]/10 text-[#6558ee] px-3.5 py-2 rounded-xl border border-[#6558ee]/20 font-medium">
+            <span>Showing attendance for: <strong>{query}</strong></span>
+            <button
+              onClick={() => setQuery('')}
+              className="ml-auto inline-flex items-center gap-1 hover:text-slate-900 text-slate-500"
+            >
+              <X className="size-3.5" /> Clear Filter
+            </button>
+          </div>
+        )}
 
         <Card className="border-slate-200 shadow-xs bg-white">
           <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between p-5 border-b border-slate-100">
             <div>
               <CardTitle className="text-base">Verified Records</CardTitle>
               <CardDescription className="text-xs">
-                Total {records.length} attendances recorded
+                Total {filtered.length} attendances recorded {query ? `for ${query}` : ''}
               </CardDescription>
             </div>
             <div className="relative w-full sm:w-64">
@@ -167,5 +191,21 @@ export default function StudentAttendanceHistoryPage() {
         </Card>
       </div>
     </DashboardLayout>
+  )
+}
+
+export default function StudentAttendanceHistoryPage() {
+  return (
+    <Suspense
+      fallback={
+        <DashboardLayout role="student">
+          <div className="flex h-64 items-center justify-center">
+            <Loader2 className="size-8 animate-spin text-[#6558ee]" />
+          </div>
+        </DashboardLayout>
+      }
+    >
+      <AttendanceHistoryContent />
+    </Suspense>
   )
 }

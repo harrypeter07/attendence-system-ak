@@ -223,10 +223,17 @@ function StudentCoursesContent() {
                       {course.percentage}% Attendance
                     </Badge>
                   </div>
-                  <CardTitle className="mt-2 text-base">{course.courseName}</CardTitle>
-                  <CardDescription className="text-xs">
-                    {course.className} · {course.credits} Credits
-                  </CardDescription>
+                  <Link
+                    href={`/student/attendance?course=${encodeURIComponent(course.courseCode)}`}
+                    className="group block"
+                  >
+                    <CardTitle className="mt-2 text-base group-hover:text-[#6558ee] transition-colors">
+                      {course.courseName}
+                    </CardTitle>
+                    <CardDescription className="text-xs group-hover:text-slate-600">
+                      {course.className} · {course.credits} Credits
+                    </CardDescription>
+                  </Link>
                 </CardHeader>
 
                 <CardContent className="p-5 pt-0 space-y-4">
@@ -251,6 +258,16 @@ function StudentCoursesContent() {
                       <span className="text-slate-800">{course.attendedSessions} of {course.totalSessions} attended</span>
                     </div>
                     <Progress value={course.percentage} className="h-2" />
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100">
+                    <Link
+                      href={`/student/attendance?course=${encodeURIComponent(course.courseCode)}`}
+                      className="inline-flex items-center justify-between w-full text-xs font-semibold text-[#6558ee] hover:text-[#5549d8] hover:underline"
+                    >
+                      <span>View Attendance Records & History</span>
+                      <span>→</span>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>

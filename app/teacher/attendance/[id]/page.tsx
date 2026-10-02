@@ -71,9 +71,89 @@ export default function LiveAttendanceRoomPage() {
   const [error, setError] = useState<string>('')
   const [fullscreen, setFullscreen] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState<Attendee | null>(null)
+  const [syncingGps, setSyncingGps] = useState(false)
+  const [gpsNotice, setGpsNotice] = useState('')
 
   const countdownRef = useRef<NodeJS.Timeout | null>(null)
   const pollRef = useRef<NodeJS.Timeout | null>(null)
+
+  async function handleSyncDeviceGps() {
+    setSyncingGps(true)
+    setGpsNotice('')
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser.')
+      setSyncingGps(false)
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const lat = parseFloat(pos.coords.latitude.toFixed(6))
+          const lng = parseFloat(pos.coords.longitude.toFixed(6))
+          const rad = session?.radiusMeters || 150
+
+          const res = await fetch(`/api/teacher/sessions/${sessionId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'update_location',
+              latitude: lat,
+              longitude: lng,
+              radiusMeters: rad,
+            }),
+          })
+          const json = await res.json()
+          if (res.ok && json.ok) {
+            setSession((prev) => (prev ? { ...prev, latitude: lat, longitude: lng } : prev))
+            setGpsNotice(
+              `Live GPS synced to your device: ${lat.toFixed(4)}, ${lng.toFixed(4)} (±${Math.round(pos.coords.accuracy)}m)`
+            )
+            setTimeout(() => setGpsNotice(''), 6000)
+          } else {
+            setError(json.message || 'Failed to update GPS')
+          }
+        } catch {
+          setError('Network error while updating session GPS')
+        } finally {
+          setSyncingGps(false)
+        }
+      },
+      (err) => {
+        setSyncingGps(false)
+        setError(`Could not access device GPS: ${err.message}. Please allow location permissions.`)
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    )
+  }
+
+  async function handleToggleGeofence() {
+    const isCurrentlyActive = (session?.latitude || 0) !== 0 || (session?.longitude || 0) !== 0
+    if (isCurrentlyActive) {
+      try {
+        const res = await fetch(`/api/teacher/sessions/${sessionId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'update_location',
+            latitude: 0,
+            longitude: 0,
+            radiusMeters: 500,
+          }),
+        })
+        const json = await res.json()
+        if (res.ok && json.ok) {
+          setSession((prev) => (prev ? { ...prev, latitude: 0, longitude: 0 } : prev))
+          setGpsNotice('Geofence disabled — students can scan from anywhere')
+          setTimeout(() => setGpsNotice(''), 6000)
+        }
+      } catch {
+        setError('Error disabling geofence')
+      }
+    } else {
+      handleSyncDeviceGps()
+    }
+  }
 
   // 1. Fetch Session Info
   async function fetchSessionDetails() {
@@ -320,16 +400,49 @@ export default function LiveAttendanceRoomPage() {
               </CardContent>
 
               {/* Classroom Geofence Status */}
-              <div className="border-t border-slate-100 bg-slate-50/70 p-4 text-xs text-slate-600 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <MapPin className="size-4 text-[#6558ee]" />
-                  <span>
-                    GPS Geofence: <strong>{session?.latitude.toFixed(4)}, {session?.longitude.toFixed(4)}</strong>
-                  </span>
+              <div className="border-t border-slate-100 bg-slate-50/70 p-4 space-y-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="size-4 text-[#6558ee]" />
+                    <span>
+                      {(session?.latitude || 0) === 0 && (session?.longitude || 0) === 0 ? (
+                        <span className="font-semibold text-amber-700">Geofence Disabled (Any location accepted)</span>
+                      ) : (
+                        <>
+                          GPS: <strong>{session?.latitude.toFixed(4)}, {session?.longitude.toFixed(4)}</strong>{' '}
+                          <span className="text-slate-400 font-mono text-[11px]">(±{session?.radiusMeters}m)</span>
+                        </>
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleSyncDeviceGps}
+                      disabled={syncingGps}
+                      className="h-7 text-xs border-slate-300 text-[#6558ee] gap-1.5 hover:bg-[#6558ee]/10"
+                    >
+                      <Compass className={`size-3.5 ${syncingGps ? 'animate-spin' : ''}`} />
+                      {syncingGps ? 'Syncing…' : 'Sync Device GPS'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleToggleGeofence}
+                      className="h-7 text-xs text-slate-500 hover:text-slate-900"
+                    >
+                      {(session?.latitude || 0) === 0 ? 'Enable Geofence' : 'Disable Geofence'}
+                    </Button>
+                  </div>
                 </div>
-                <Badge variant="outline" className="border-slate-300 font-mono text-[11px]">
-                  Radius: ±{session?.radiusMeters}m
-                </Badge>
+
+                {gpsNotice && (
+                  <p className="text-[11px] font-semibold text-emerald-700 animate-in fade-in">
+                    ✓ {gpsNotice}
+                  </p>
+                )}
               </div>
             </Card>
           </div>
