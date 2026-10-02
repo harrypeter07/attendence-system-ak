@@ -157,17 +157,24 @@ export default function TeacherDashboardPage() {
 
         {/* Assigned Classes and Recent Sessions */}
         <div className="grid gap-6 lg:grid-cols-12">
-          {/* Assigned Classes */}
+          {/* My Classes & Courses */}
           <div className="lg:col-span-7 space-y-4">
             <Card className="border-slate-200 shadow-xs bg-white">
               <CardHeader className="flex flex-row items-center justify-between pb-3">
                 <div>
-                  <CardTitle className="text-base">Assigned Classes</CardTitle>
-                  <CardDescription className="text-xs">Your course sections and enrolled counts</CardDescription>
+                  <CardTitle className="text-base">My Classes & Courses</CardTitle>
+                  <CardDescription className="text-xs">Your active courses, sections, and enrolled students</CardDescription>
                 </div>
-                <Link href="/teacher/classes" className="text-xs font-semibold text-[#6558ee] hover:underline flex items-center gap-1">
-                  View classes <ArrowRight className="size-3" />
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link href="/teacher/classes">
+                    <Button size="sm" variant="outline" className="h-7 gap-1 text-[11px] border-slate-300">
+                      <Plus className="size-3" /> Create Class
+                    </Button>
+                  </Link>
+                  <Link href="/teacher/classes" className="text-xs font-semibold text-[#6558ee] hover:underline flex items-center gap-1">
+                    Manage <ArrowRight className="size-3" />
+                  </Link>
+                </div>
               </CardHeader>
               <CardContent className="p-0">
                 {loading ? (
@@ -175,7 +182,14 @@ export default function TeacherDashboardPage() {
                     <Loader2 className="size-6 animate-spin text-[#6558ee]" />
                   </div>
                 ) : classes.length === 0 ? (
-                  <p className="p-6 text-center text-xs text-slate-400">No classes assigned.</p>
+                  <div className="p-8 text-center">
+                    <p className="text-xs text-slate-500">You haven't created any course sections yet.</p>
+                    <Link href="/teacher/classes" className="mt-3 inline-block">
+                      <Button size="sm" className="bg-[#6558ee] text-xs font-semibold text-white hover:bg-[#5549d8]">
+                        <Plus className="size-3 mr-1" /> Create Your First Class
+                      </Button>
+                    </Link>
+                  </div>
                 ) : (
                   <div className="divide-y divide-slate-100">
                     {classes.map((c) => (
