@@ -1,4 +1,4 @@
-# attendence-system-ak
+# attendence-app
 
 > **Attendly**: Next-Generation Smart QR Attendance System with 15-Second Dynamic Cryptographic Rotation and GPS Geofencing.
 
