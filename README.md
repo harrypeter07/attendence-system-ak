@@ -10,11 +10,11 @@
 
 | Role | Email | Password | Purpose |
 | :--- | :--- | :--- | :--- |
-| **Admin** | `admin@attendly.edu` | `AdminPassword123!` | Institution Dashboard, Student & Teacher CRUD, Reports, Audit Logs |
-| **Teacher** | `teacher@attendly.edu` | `TeacherPassword123!` | Dynamic 15s QR Session Launcher, Live Attendee Roster, Class Reports |
-| **Student** | `student@attendly.edu` | `StudentPassword123!` | Mobile Camera QR Scanner, GPS Geofence Verification, Attendance History |
-| **Student 2** | `student2@attendly.edu` | `StudentPassword123!` | Additional enrolled student |
-| **Student 3** | `student3@attendly.edu` | `StudentPassword123!` | Additional enrolled student |
+| **Admin** | `admin@attendly.edu` | `password123` | Institution Dashboard, Student & Teacher CRUD, Reports, Audit Logs |
+| **Teacher** | `teacher@attendly.edu` | `password123` | Dynamic 15s QR Session Launcher, Live Attendee Roster, Class Reports |
+| **Student** | `student@attendly.edu` | `password123` | Mobile Camera QR Scanner, GPS Geofence Verification, Attendance History |
+| **Student 2** | `student2@attendly.edu` | `password123` | Additional enrolled student |
+| **Student 3** | `student3@attendly.edu` | `password123` | Additional enrolled student |
 
 *(One-click demo login buttons are also available directly on the login page!)*
 

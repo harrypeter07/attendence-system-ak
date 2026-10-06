@@ -362,11 +362,11 @@ async function main() {
   console.log('--- Creating Demo Accounts & Initial Data ---')
 
   const usersToSeed = [
-    { email: 'admin@attendly.edu', password: 'AdminPassword123!', full_name: 'Dr. Arthur Vance (Admin)', role: 'admin', employee_id: 'EMP-001' },
-    { email: 'teacher@attendly.edu', password: 'TeacherPassword123!', full_name: 'Prof. Sarah Wilson (Teacher)', role: 'teacher', employee_id: 'EMP-102' },
-    { email: 'student@attendly.edu', password: 'StudentPassword123!', full_name: 'Ava Martinez (Student)', role: 'student', student_id: 'STU-19302' },
-    { email: 'student2@attendly.edu', password: 'StudentPassword123!', full_name: 'Marcus Thompson (Student)', role: 'student', student_id: 'STU-20481' },
-    { email: 'student3@attendly.edu', password: 'StudentPassword123!', full_name: 'Noah Williams (Student)', role: 'student', student_id: 'STU-21094' },
+    { email: 'admin@attendly.edu', password: 'password123', full_name: 'Dr. Arthur Vance (Admin)', role: 'admin', employee_id: 'EMP-001' },
+    { email: 'teacher@attendly.edu', password: 'password123', full_name: 'Prof. Sarah Wilson (Teacher)', role: 'teacher', employee_id: 'EMP-102' },
+    { email: 'student@attendly.edu', password: 'password123', full_name: 'Ava Martinez (Student)', role: 'student', student_id: 'STU-19302' },
+    { email: 'student2@attendly.edu', password: 'password123', full_name: 'Marcus Thompson (Student)', role: 'student', student_id: 'STU-20481' },
+    { email: 'student3@attendly.edu', password: 'password123', full_name: 'Noah Williams (Student)', role: 'student', student_id: 'STU-21094' },
   ]
 
   const userIds = {}

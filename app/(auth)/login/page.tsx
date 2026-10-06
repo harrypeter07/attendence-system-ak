@@ -47,13 +47,13 @@ export default function LoginPage() {
     setMode('signin')
     if (demoRole === 'student') {
       setEmail('student@attendly.edu')
-      setPassword('StudentPassword123!')
+      setPassword('password123')
     } else if (demoRole === 'teacher') {
       setEmail('teacher@attendly.edu')
-      setPassword('TeacherPassword123!')
+      setPassword('password123')
     } else {
       setEmail('admin@attendly.edu')
-      setPassword('AdminPassword123!')
+      setPassword('password123')
     }
   }
 
